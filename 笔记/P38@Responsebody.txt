@@ -1,2 +1,0 @@
-@Responsebody
-自动地把对象反序列化成json的格式给前端
