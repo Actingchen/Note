@@ -1,0 +1,28 @@
+#idea
+ctrl+Alt+v 从new方法中快速创建局部变量
+psvm
+sout
+crtl+P查看参数属性
+ctrl+shift+up 上移
+shift+f6快速改变变量名
+在某行结尾ctrl+d：拷贝一行到下一行
+ctrl+Alt+L代码格式化
+两下shift 查找文件
+ctrl  E 最近打开
+ctrl n 查找类
+ctrl F12
+Alt F7查找项目和库中的使用
+ctrl alt m将选中的区域抽取成方法
+ctrl alt p往外抛参数
+--------------------------------
+#html
+Tab键补齐
+ctrl+w嵌套
+#谷歌
+ctrl+shift+n打开匿名窗口
+--------------------------------
+#eclipse
+ctrl+shift+o
+--------------------------------
+#windows
+Alt +Tap查看任务视图
