@@ -1,3 +1,10 @@
+Table of Contents
+=================
+
+
+
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
 # Java基础
 
 ## 1 JDK-JRE-JVM
@@ -926,6 +933,17 @@ StringBuffer vs StringBuilder
 >
 > 线程不安全性能更高，所以开发中，优先采用StringBuilder
 
+9异常
+
+10文件和io
+
+11反射
+
+12类加载机制
+
+13类初始化的对象创建过程
+
+14元注解
 
 
 
@@ -933,14 +951,9 @@ StringBuffer vs StringBuilder
 
 
 
+#查漏补缺
 
-
-
-
-
-
-
-# 序列化和反序列化
+##序列化和反序列化
 
 比如，ArrayList 实现**java.io.Serializable 接口**，这意味着ArrayList**支持序列化**，**能通过序列化去传输**。
 
@@ -957,7 +970,7 @@ StringBuffer vs StringBuilder
 
 　　当两个进程在进行远程通信时，彼此可以发送各种类型的数据。无论是何种类型的数据，都会以二进制序列的形式在网络上传送。发送方需要把这个Java对象转换为字节序列，才能在网络上传送；接收方则需要把字节序列再恢复为Java对象。
 
-# java中同步和异步有什么异同？
+##java中同步和异步有什么异同？
 
 同步交互：指发送一个请求,需要等待返回,然后才能够发送下一个请求，有个等待过程；
 
