@@ -1,15 +1,17 @@
-
+# 提交
+git status 	//查看所有文件状态
+git add .       	//添加所有文件到暂存区
+git commit -m " "   //"消息内容"    提交暂存区中的内容到本地仓库 -m 提交信息
+git push                  //push到远程仓库
 ---------------------
-git status
-git add .
-git commit -m " "
-git push
----------------------
+git push -u origin master 
+# 更换remote地址
+git remote set-url origin https://github.com/meteorsh/word-cloud.git
 
+# 查看远程仓库地址
+git remote -v  
 
-
-使用git remote -v  查看远程仓库地址
-
+# 删除暂存区文件
 解决的问题是：向暂存区提交了多余的文件。
 
 解决方法：
@@ -23,33 +25,13 @@ git push
 让本地与为提交的状态与远程仓库一致： git reset  HEAD  文件名
 
 
-#查看指定文件状态
-git status [filename]
-
-#查看所有文件状态
-git status
-
-# git add .                  添加所有文件到暂存区
-# git commit -m "消息内容"    提交暂存区中的内容到本地仓库 -m 提交信息
-添加到暂存区
-
-commit 提交
-
-push到远程仓库
-然后使用 cd 命令进入我们的master（在这我就不多说了，上一篇Git Bash基本操作中有讲过）
-
+# 拉取项目
 
 git pull origin master 将我们 GitHub 仓库里的项目拉下来
 
-git rm -r --cached 文件/文件夹名称
-
-git commit -m "备注信息"
-
-$ git push -u origin master 将本次更改更新到GitHub上即可
-
---------------
-某文件查看自己之前提交对比已修改的
+# idea中的git使用
+## 1 某文件查看自己之前提交对比已修改的
 右键——》Git——》显示历史——》点提交记录
----
-还原文件成上一次提交的状态
+
+## 2 还原文件成上一次提交的状态
 右键——》Git——》revert
