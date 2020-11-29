@@ -1,0 +1,7 @@
+
+1、先查看进程pid
+ps -ef | grep 进程名
+ps -ef | grep more   #全部
+
+2、通过pid查看占用端口
+netstat -nap | grep 进程pid
