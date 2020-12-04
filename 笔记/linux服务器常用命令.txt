@@ -1,7 +1,16 @@
-
-1、先查看进程pid
+# 1 查看所有进程
+ps aux 查看所有进程
+# 2 指定查看进程pid
 ps -ef | grep 进程名
-ps -ef | grep more   #全部
 
-2、通过pid查看占用端口
+# 3 通过pid查看占用端口
 netstat -nap | grep 进程pid
+
+# 4后台运行jar包
+nohup java -jar xxxx-SNAPSHOT.jar &
+
+# 5杀死进程pid
+kill -9 22899  杀死pid，关闭程序
+
+# 6查看端口号
+ps -ef | grep java 查看java 运行的几个端口号
