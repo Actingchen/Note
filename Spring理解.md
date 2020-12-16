@@ -400,10 +400,23 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
     - BeanNameAware
     - BeanClassLoaderAware
     - BeanFactoryAware
+  
+  比如：
+  
+  ```java
+  //已知
+  public interface BeanNameAware extends Aware {
+        void setBeanName(String name);
+  }
+  
+  //定义一个用户类，实现BeanNameAware接口，重写setBeanName方法，此时bean会感知到自身的BeanName（对应Spring容器的BeanId属性）属性
+  ```
+  
   - Aware Group2
     - EnvironmentAware
     - EmbeddedValueResolverAware
     - ApplicationContextAware(ResourceLoaderAware\ApplicationEventPublisherAware\MessageSourceAware)
+  
 - 生命周期
   - InitializingBean
   - DisposableBean
