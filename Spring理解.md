@@ -1,9 +1,5 @@
 #Spring
 
-
-
-
-
 ## Spring context
 
 类似进程在执行程序（不管是用户程序还是内核中的程序）时，都会依赖一个上下文，这个上下文提供我们运行时需要的一些数据和保存运行时的一些数据。如果执行中遇到了中断，CPU会从用户态切换到内核态，此时进程处于的进程上下文会被切换到中断上下文中，从而可以根据中断号去执行相应的中断程序。
@@ -113,6 +109,16 @@ ApplicationContext ctx=new FileSystemXmlApplicationContext( "G:/Test/application
 * **IOC**：以前创建对象是由程序主动创建对象、主动去控制获取依赖对象，类之间耦合度高，难于测试，现在IOC利用反射机制把创建对象的控制权交给Spring IOC容器来创建（时机）、管理（对象的生命周期）、装配（通过依赖注入，配置对象）。
 * **DI Dependency Injection** 依赖注入：容器能知道哪个组件（类）运行的时候，需要或者说是依赖另一个类（组件）；容器通过反射的形式，将准备好的BookService对象注入（利用反射给属性赋值）到BookServlet中。
 
+IoC 是设计思想，DI 是具体的实现方式；
+
+IoC 是理论，DI 是实践；
+
+从而实现对象之间的解藕。
+
+**当然，IoC 也可以通过其他的方式来实现，而 DI 只是 Spring 的选择。**
+
+IoC 和 DI 也并非 Spring 框架提出来的，Spring 只是应用了这个设计思想和理念到自己的框架里去。
+
 ### IOC优点
 
 * 对程序最小的代价和最小的入侵性实现松散耦合
@@ -196,7 +202,7 @@ Setter方法注入：Setter方法注入是容器通过调用无参构造器或�
 
 两种依赖方式都可以使用，构造器注入和setter方法注入。==最好的解决方法使用构造器参数实现强制依赖，setter实现可选依赖==
 
-### Springbean 作用域
+### Springbean 作用域/对象的生命周期
 
 - Singleton，这是 Spring 的默认作用域，也就是为每个 IOC 容器创建唯一的一个 Bean 实例。
 - Prototype，针对每个 getBean 请求，容器都会单独创建一个 Bean 实例。
@@ -386,7 +392,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 ![](https://upload-images.jianshu.io/upload_images/4558491-dc3eebbd1d6c65f4.png?imageMogr2/auto-orient/strip|imageView2/2/w/823/format/webp)
 
-![image-20201216155819530](\images\image-20201216155819530.png)
+![image-20201216155819530](.\images\image-20201216155819530.png)
 
 影响多个Bean
 
@@ -469,9 +475,201 @@ https://www.jianshu.com/p/1dec08d290c1
 
 ```
 
+
+
+```java
+protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args) throws BeanCreationException {
+    if (this.logger.isTraceEnabled()) {
+        this.logger.trace("Creating instance of bean '" + beanName + "'");
+    }
+
+    RootBeanDefinition mbdToUse = mbd;
+    Class<?> resolvedClass = this.resolveBeanClass(mbd, beanName, new Class[0]);
+    if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
+        mbdToUse = new RootBeanDefinition(mbd);
+        mbdToUse.setBeanClass(resolvedClass);
+    }
+
+    try {
+        mbdToUse.prepareMethodOverrides();
+    } catch (BeanDefinitionValidationException var9) {
+        throw new BeanDefinitionStoreException(mbdToUse.getResourceDescription(), beanName, "Validation of method overrides failed", var9);
+    }
+
+    Object beanInstance;
+    try {
+        beanInstance = this.resolveBeforeInstantiation(beanName, mbdToUse);
+        if (beanInstance != null) {
+            return beanInstance;
+        }
+    } catch (Throwable var10) {
+        throw new BeanCreationException(mbdToUse.getResourceDescription(), beanName, "BeanPostProcessor before instantiation of bean failed", var10);
+    }
+
+    try {
+        beanInstance = this.doCreateBean(beanName, mbdToUse, args);
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace("Finished creating instance of bean '" + beanName + "'");
+        }
+
+        return beanInstance;
+    } catch (ImplicitlyAppearedSingletonException | BeanCreationException var7) {
+        throw var7;
+    } catch (Throwable var8) {
+        throw new BeanCreationException(mbdToUse.getResourceDescription(), beanName, "Unexpected exception during bean creation", var8);
+    }
+}
+```
+
+```
+@Nullable
+protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
+    Object bean = null;
+    if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
+        if (!mbd.isSynthetic() && this.hasInstantiationAwareBeanPostProcessors()) {
+            Class<?> targetType = this.determineTargetType(beanName, mbd);
+            if (targetType != null) {
+                bean = this.applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
+                if (bean != null) {
+                    bean = this.applyBeanPostProcessorsAfterInitialization(bean, beanName);
+                }
+            }
+        }
+
+        mbd.beforeInstantiationResolved = bean != null;
+    }
+
+    return bean;
+}
+```
+
+```java
+protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) {
+    if (bw == null) {
+        if (mbd.hasPropertyValues()) {
+            throw new BeanCreationException(mbd.getResourceDescription(), beanName, "Cannot apply property values to null instance");
+        }
+    } else {
+        if (!mbd.isSynthetic() && this.hasInstantiationAwareBeanPostProcessors()) {
+            Iterator var4 = this.getBeanPostProcessors().iterator();
+
+            while(var4.hasNext()) {
+                BeanPostProcessor bp = (BeanPostProcessor)var4.next();
+                if (bp instanceof InstantiationAwareBeanPostProcessor) {
+                    InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor)bp;
+                    if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        PropertyValues pvs = mbd.hasPropertyValues() ? mbd.getPropertyValues() : null;
+        int resolvedAutowireMode = mbd.getResolvedAutowireMode();
+        if (resolvedAutowireMode == 1 || resolvedAutowireMode == 2) {
+            MutablePropertyValues newPvs = new MutablePropertyValues((PropertyValues)pvs);
+            if (resolvedAutowireMode == 1) {
+                this.autowireByName(beanName, mbd, bw, newPvs);
+            }
+
+            if (resolvedAutowireMode == 2) {
+                this.autowireByType(beanName, mbd, bw, newPvs);
+            }
+
+            pvs = newPvs;
+        }
+
+        boolean hasInstAwareBpps = this.hasInstantiationAwareBeanPostProcessors();
+        boolean needsDepCheck = mbd.getDependencyCheck() != 0;
+        PropertyDescriptor[] filteredPds = null;
+        if (hasInstAwareBpps) {
+            if (pvs == null) {
+                pvs = mbd.getPropertyValues();
+            }
+
+            Iterator var9 = this.getBeanPostProcessors().iterator();
+
+            while(var9.hasNext()) {
+                BeanPostProcessor bp = (BeanPostProcessor)var9.next();
+                if (bp instanceof InstantiationAwareBeanPostProcessor) {
+                    InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor)bp;
+                    PropertyValues pvsToUse = ibp.postProcessProperties((PropertyValues)pvs, bw.getWrappedInstance(), beanName);
+                    if (pvsToUse == null) {
+                        if (filteredPds == null) {
+                            filteredPds = this.filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
+                        }
+
+                        pvsToUse = ibp.postProcessPropertyValues((PropertyValues)pvs, filteredPds, bw.getWrappedInstance(), beanName);
+                        if (pvsToUse == null) {
+                            return;
+                        }
+                    }
+
+                    pvs = pvsToUse;
+                }
+            }
+        }
+
+        if (needsDepCheck) {
+            if (filteredPds == null) {
+                filteredPds = this.filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
+            }
+
+            this.checkDependencies(beanName, mbd, filteredPds, (PropertyValues)pvs);
+        }
+
+        if (pvs != null) {
+            this.applyPropertyValues(beanName, mbd, bw, (PropertyValues)pvs);
+        }
+
+    }
+}
+```
+
+
+
 ###ApplicationContext和BeanFactory的区别？
 
+BeanFactory和AppliationContext是Spring的两大核心接口，都可以当作Spring的容器。其中ApplicationContext是BeanFactory的子接口
 
+（1）依赖关系
+
+BeanFactory：是Spring里面最底层的接口，包含了各种bean的定义，读取bean配置文档，管理bean的加载、实例化、控制bean的生命周期，维护bean之间的依赖关系。
+
+ApplicationContext接口作为BeanFactory的派生，除了提供beanFactory所具有的功能外，还提供了更完整的框架功能：
+
+* 继承MessageSource，因此支持国际化。
+* 统一的资源文件访问方式
+* 提供在监听器中注册bean的事件
+* 同时加载多个配置文件
+* 载入多个（有继承关系的）上下文，使得每一个上下文都专注于一个特定的层次，比如应用的Web层。
+
+（2）加载方式
+
+BeanFactory采用的是延迟加载形式来注入Bean的，即只有在使用到某个Bean时（调用getBean（））,才对该bean进行加载实例化。所以，我们就不能发现一些只有加载后才会出现的异常。
+
+ApplicationContext，它是容器启动时一次性创建了所有Bean。这样，在容器启动时，我们可以及时发现配置错误问题。ApplicationContext启动后预载入所有的单实例Bean，通过预载入所有的单实例Bean，这样需要用的时候，不用等待，因为已经创建好了，缺点是启动慢。
+
+（3）创建方式
+
+BeanFactory通常以编程的方式被创建，ApplicationContext还能以声明的方式创建，如使用ContextLoader。
+
+
+
+（4）注册方式
+
+BeanFactory和ApplicationContext都支持BeanPostProcess、BeanFactoryPostProcess的使用，但两者的区别时：前者需要手动注册bean，比如registerSingleton（）方法，而ApplicationContext则是自动注册bean。
+
+```java
+@Test
+public void test(){
+    ClassPathXmlApplicationContext appContext =
+            new ClassPathXmlApplicationContext("classpath:app-context.xml");
+    Object object = new Object();
+    appContext.getBeanFactory().registerSingleton("object",object);
+    System.out.println(object == appContext.getBean("object"));
+}
+```
 
 
 
@@ -514,6 +712,12 @@ AOP 本质上是==通过**预编译方式**和**运行期动态代理**实现在
 * 公共业务发生扩展的时候，方便集中管理
 * 一个动态代理类 代理的是一个接口，一般就是对应的一类业务
 * 一个动态代理类 可以代理多个类 只要实现了同一个接口即可
+
+
+
+
+
+
 
 ## 事务隔离级别
 
