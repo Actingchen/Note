@@ -250,6 +250,36 @@ String的equals方法：比较的时对象的值。当创建String类型的对�
 
 hashCode的作用是获取哈希码。它返回的是一个int整数。这个哈希码的作用是确定对象再哈希表的索引位置。hashCode()是定义在Object类中的，也就是任意类中都有，另外，native关键字修饰的本地方法，也就是本质上里面调用的是c或c++实现的。hashCode（）默认是在对堆的对象产生独特值。
 
+###Java中sleep()和wait()的区别
+
+1、这两个方法来自不同的类分别是，sleep来自Thread类，和wait来自Object类。
+
+2、最主要是sleep方法没有释放锁，而wait方法释放了锁，使得其他线程可以使用同步控制块或者方法。
+
+3、使用范围：wait，notify和notifyAll只能在同步控制方法或者同步控制块里面使用，而sleep可以在任何地方使用
+
+4、sleep必须捕获异常，而wait，notify和notifyAll不需要捕获异常
+
+###为什么重写了equals就必须重写hashCode
+
+首先equals与hashcode间的关系是这样的：
+
+1、如果两个对象相同（即用equals比较返回true），那么它们的hashCode值一定要相同；
+
+2、如果两个对象的hashCode相同，它们并不一定相同(即用equals比较返回false)  
+
+所以如果重写了equals的时候为了保证这种关系，需要重写hashcode方法
+
+###谈谈类加载机制
+
+###transient的作用及使用方法
+
+   我们都知道一个对象只要实现了Serilizable接口，这个对象就可以被序列化，java的这种序列化模式为开发者提供了很多便利，我们可以不必关系具体序列化的过程，只要这个类实现了Serilizable接口，这个类的所有属性和方法都会自动序列化。
+
+   然而在实际开发过程中，我们常常会遇到这样的问题，这个类的有些属性需要序列化，而其他属性不需要被序列化，打个比方，如果一个用户有一些敏感信息（如密码，银行卡号等），为了安全起见，不希望在网络操作（主要涉及到序列化操作，本地序列化缓存也适用）中被传输，这些信息对应的变量就可以加上transient关键字。换句话说，**这个字段的生命周期仅存于调用者的内存中而不会写到磁盘里持久化。**
+
+   总之，java 的transient关键字为我们提供了便利，你只需要实现Serilizable接口，将**不需要序列化**的属性前添加关键字transient，序列化对象的时候，这个属性就不会序列化到指定的目的地中。
+
 ##  4 基本数据类型
 
 ### 几种基本数据类型？对应的封装类？各占多少字节？
@@ -427,10 +457,14 @@ private static class IntegerCache {
 
 ### Object
 
-Java中所有的类都继承自`java.lang.Object`类，Object类中一共有11个方法：
+Java中所有的类都继承自`java.lang.Object`类，Object类中一共有12个方法：
 
 ```java
-public final native Class<?> getClass();
+private static native void registerNatives();
+static {
+        registerNatives();
+}
+public final native Class<?> getClass();//final方法，获得运行时类型。
 
 public native int hashCode();
 
@@ -439,6 +473,7 @@ public boolean equals(Object obj) {
 }
 
 protected native Object clone() throws CloneNotSupportedException;
+//保护方法，实现对象的浅复制，只有实现了Cloneable接口才可以调用该方法，否则抛出CloneNotSupportedException异常。主要是JAVA里除了8种基本类型传参数是值传递，其他的类对象传参数都是引用传递，我们有时候不希望在方法里讲参数改变，这是就需要在类中复写clone方法。
 
 public String toString() {
     return getClass().getName() + "@" + Integer.toHexString(hashCode());
@@ -491,7 +526,7 @@ System.out.println(i1Class == i2Class);
 
 上面的代码运行结果为`true`，也就是说两个Integer的实例的getClass方法返回的Class对象是同一个。
 
-####Integer.class和int.class
+#####Integer.class和int.class
 
 Java中还有一个方法可以获取Class，例如我们想获取一个Integer实例对应的Class，可以直接通过`Integer.class`来获取，请看下面的例子：
 
@@ -648,7 +683,9 @@ Java要求一个类的**equals方法和hashCode方法同时覆写**。我们刚�
 
 ####clone方法
 
-用于克隆一个对象，被克隆的对象需要implements Cloneable接口，否则调用这个对象的clone方法，将会抛出CloneNotSupportedException异常。克隆的对象通常情况下满足以下三条规则：
+保护方法，实现对象的浅复制，只有实现了Cloneable接口才可以调用该方法，否则抛出CloneNotSupportedException异常。主要是JAVA里除了8种基本类型传参数是值传递，其他的类对象传参数都是引用传递，我们有时候不希望在方法里将参数改变，这时就需要在类中复写clone方法。
+
+克隆的对象通常情况下满足以下三条规则：
 
 1. x.clone() != x，克隆出来的对象和原来的对象不是同一个，指向不同的内存地址
 2. x.clone().getClass() == x.getClass()
@@ -656,122 +693,11 @@ Java要求一个类的**equals方法和hashCode方法同时覆写**。我们刚�
 
 **一个对象进行clone时，原生类型和包装类型的field的克隆原理不同。对于原生类型是直接复制一个，而对于包装类型，则只是复制一个引用而已，并不会对引用类型本身进行克隆。**
 
-#####浅拷贝
+#####浅拷贝和深拷贝
 
-浅拷贝例子：
+https://www.jianshu.com/p/94dbef2de298
 
-```
-public class ShallowCopy {
-
-    public static void main(String[] args){
-        Man man = new Man();
-        Man manShallowCopy = (Man) man.clone();
-        System.out.println(man == manShallowCopy);
-        System.out.println(man.name == manShallowCopy.name);
-        System.out.println(man.mate == manShallowCopy.mate);
-    }
-}
-
-class People implements Cloneable {
-
-    // primitive type
-    public int id;
-    // reference type
-    public String name;
-
-    @Override
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-}
-
-class Man extends People implements Cloneable {
-    // reference type
-    public People mate = new People();
-
-    @Override
-    public Object clone() {
-        return super.clone();
-    }
-}
-复制代码
-```
-
-上面的代码的运行结果是:
-
-```
-false
-true
-true
-复制代码
-```
-
-通过浅拷贝出来的Man对象manShallowCopy的name和mate属性和原来的对象man都指向了相同的内存地址。在对Man的name和mate进行拷贝时浅拷贝只是对引用进行了拷贝，指向的还是同一块内存地址。
-
-#####深拷贝
-
-对一个对象深拷贝时，对于对象的包装类型的属性，会对其再进行拷贝，从而达到深拷贝的目的，请看下面的例子：
-
-```
-public class DeepCopy {
-
-    public static void main(String[] args){
-        Man man = new Man();
-        Man manDeepCopy = (Man) man.clone();
-        System.out.println(man == manDeepCopy);
-        System.out.println(man.mate == manDeepCopy.mate);
-    }
-}
-
-class People implements Cloneable {
-
-    // primitive type
-    public int id;
-    // reference type
-    public String name;
-
-    @Override
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-}
-
-class Man extends People implements Cloneable {
-    // reference type
-    public People mate = new People();
-
-    // 深拷贝Man
-    @Override
-    public Object clone() {
-        Man man = (Man) super.clone();
-        man.mate = (People) this.mate.clone(); // 再对mate属性进行clone，从而达到深拷贝
-        return man;
-    }
-}
-复制代码
-```
-
-上面代码的运行结果为：
-
-```
-false
-false
-复制代码
-```
-
-Man对象的clone方法中，我们先对Man进行了clone，然后对mate属性也进行了拷贝。因此man的mate和manDeepCopy的mate指向了不同的内存地址。也就是深拷贝。
-
-**通常来说对一个对象进行完完全全的深拷贝是不现实的，例如上面的例子中，虽然我们对Man的mate属性进行了拷贝，但是无法对name（String类型）进行拷贝，拷贝的还是引用而已。**
+https://www.cnblogs.com/shakinghead/p/7651502.html
 
 ####toString方法
 
