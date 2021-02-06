@@ -1,3 +1,20 @@
+#启动
+
+windows  cmd 
+
+```
+redis-server redis.windows.conf
+```
+
+报错解决方案
+
+解决方案如下，按顺序输入如下命令就可以连接成功
+
+1. redis-cli.exe
+2. shutdown
+3. exit
+4. redis-server.exe redis.windows.conf
+
 # 基础入门
 
 - 数据结构

@@ -1,44 +1,6 @@
-[1、Spring是什么?](#Z9BR-1608626245289)
+# spring
 
-[2、Spring 的优点？](#lJyo-1608548690384)
-
-[3、Spring的AOP理解：](#n5Wl-1608548690384)
-
-[4、Spring的IoC理解：](#lLSO-1608548690385)
-
-[5、BeanFactory和ApplicationContext有什么区别？](#W7fo-1608548690385)
-
-[6、请解释Spring Bean的生命周期？](#Tz6l-1608548690385)
-
-[7、 解释Spring支持的几种bean的作用域。](#Sg63-1608548690385)
-
-[8、Spring框架中的单例Beans是线程安全的么？](#aMMa-1608548690386)
-
-[9、Spring如何处理线程并发问题？](#YLnE-1608548690386)
-
-[10-1、Spring基于xml注入bean的几种方式：](#CRwT-1608548690386)
-
-[10-2、Spring的自动装配：](#Sq6B-1608548690386)
-
-[11、Spring 框架中都用到了哪些设计模式？](#db2s-1608548690386)
-
-[12、Spring事务的实现方式和实现原理：](#SyVT-1608548690386)
-
-[（1）Spring事务的种类：](#EnUa-1608548690386)
-
-[（2）spring的事务传播行为：](#o8Ej-1608548690388)
-
-[（3）Spring中的隔离级别：](#BwJa-1608548690388)
-
-[13、Spring框架中有哪些不同类型的事件？](#MGil-1608548690388)
-
-[14、解释一下Spring AOP里面的几个名词：](#Ht5N-1608548690388)
-
-[15、Spring通知有哪些类型？](#vjgW-1608548690389)
-
-[16、Spring的循环依赖](#nLMA-1608549198612)
-
-**1、Spring是什么?**
+##**1、Spring是什么?**
 
 Spring是一个轻量级的IoC和AOP容器框架。是为Java应用程序提供基础性服务的一套框架，目的是用于简化企业应用程序的开发，它使得开发者只需要关心业务需求。
 
@@ -60,7 +22,7 @@ Spring Web：提供了基本的面向Web的综合特性，例如多方文件上�
 
 Spring MVC：提供面向Web应用的Model-View-Controller实现。
 
-**2、Spring 的优点？**
+##**2、Spring 的优点？**
 
 （1）spring属于低侵入式设计，代码的污染极低；
 
@@ -70,7 +32,7 @@ Spring MVC：提供面向Web应用的Model-View-Controller实现。
 
 （4）spring对于主流的应用框架提供了集成支持。
 
-**3、Spring的AOP理解：**
+##**3、Spring的AOP理解：**
 
 OOP面向对象，允许开发者定义纵向的关系，但并适用于定义横向的关系，导致了大量代码的重复，而不利于各个模块的重用。
 
@@ -82,7 +44,7 @@ AOP实现的关键在于 代理模式，AOP代理主要分为静态代理和动�
 
 （2）Spring AOP使用的动态代理，所谓的动态代理就是说AOP框架不会去修改字节码，而是每次运行时在内存中临时为方法生成一个AOP对象，这个AOP对象包含了目标对象的全部方法，并且在特定的切点做了增强处理，并回调原对象的方法。
 
-Spring AOP中的动态代理主要有两种方式，JDK动态代理和CGLIB动态代理：
+###Spring AOP中的动态代理主要有两种方式，JDK动态代理和CGLIB动态代理：
 
 ①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，InvocationHandler 通过invoke方法反射来调用目标类中的代码，动态地将横切逻辑和业务编织在一起；接着，Proxy利用 InvocationHandler动态创建一个符合某一接口的的实例, 生成目标类的代理对象。
 
@@ -92,7 +54,7 @@ Spring AOP中的动态代理主要有两种方式，JDK动态代理和CGLIB动�
 
 InvocationHandler 的 invoke(Object proxy,Method method,Object[] args)：proxy是最终生成的代理实例; method 是被代理目标实例的某个具体方法; args 是被代理目标实例某个方法的具体入参, 在方法反射调用时使用。
 
-**4、Spring的IoC理解：**
+##**4、Spring的IoC理解：**
 
 （1）IOC就是控制反转，是指创建对象的控制权的转移，以前创建对象的主动权和时机是由自己把控的，而现在这种权力转移到Spring容器中，并由容器根据配置文件去创建实例和管理各个实例之间的依赖关系，对象与对象之间松散耦合，也利于功能的复用。DI依赖注入，和控制反转是同一个概念的不同角度的描述，即 应用程序在运行时依赖IoC容器来动态注入对象需要的外部资源。
 
@@ -102,7 +64,7 @@ InvocationHandler 的 invoke(Object proxy,Method method,Object[] args)：proxy�
 
 IoC让相互协作的组件保持松散的耦合，而AOP编程允许你把遍布于应用各层的功能分离出来形成可重用的功能组件。
 
-**5、BeanFactory和ApplicationContext有什么区别？**
+##**5、BeanFactory和ApplicationContext有什么区别？**
 
 BeanFactory和ApplicationContext是Spring的两大核心接口，都可以当做Spring的容器。其中ApplicationContext是BeanFactory的子接口。
 
@@ -128,7 +90,7 @@ BeanFactory和ApplicationContext是Spring的两大核心接口，都可以当做
 
 （4）BeanFactory和ApplicationContext都支持BeanPostProcessor、BeanFactoryPostProcessor的使用，但两者之间的区别是：BeanFactory需要手动注册，比如registerSingleton（）方法，而ApplicationContext则是自动注册。
 
-**6、请解释Spring Bean的生命周期？**
+##**6、请解释Spring Bean的生命周期？**
 
 首先说一下Servlet的生命周期：实例化，初始init，接收请求service，销毁destroy；
 
@@ -179,7 +141,7 @@ Spring上下文中的Bean生命周期也类似，
 
 最后，如果这个Bean的Spring配置中配置了destroy-method属性，会自动调用其配置的销毁方法。
 
-**7、 解释Spring支持的几种bean的作用域。**
+##**7、 解释Spring支持的几种bean的作用域。**
 
 Spring容器中的bean可以分为5个范围：
 
@@ -193,11 +155,11 @@ Spring容器中的bean可以分为5个范围：
 
 （5）global-session：全局作用域，global-session和Portlet应用相关。当你的应用部署在Portlet容器中工作时，它包含很多portlet。如果你想要声明让所有的portlet共用全局的存储变量的话，那么这全局变量需要存储在global-session中。全局作用域与Servlet中的session作用域效果相同。
 
-**8、Spring框架中的单例Beans是线程安全的么？**
+##**8、Spring框架中的单例Beans是线程安全的么？**
 
 Spring框架并没有对单例bean进行任何多线程的封装处理。关于单例bean的线程安全和并发问题需要开发者自行去搞定。但实际上，大部分的Spring bean并没有可变的状态(比如Serview类和DAO类)，所以在某种程度上说Spring的单例bean是线程安全的。如果你的bean有多种状态的话（比如 View Model 对象），就需要自行保证线程安全。最浅显的解决办法就是将多态bean的作用域由“singleton”变更为“prototype”。
 
-**9、Spring如何处理线程并发问题？**
+##**9、Spring如何处理线程并发问题？**
 
 在一般情况下，只有无状态的Bean才可以在多线程环境下共享，在Spring中，绝大部分Bean都可以声明为singleton作用域，因为Spring对一些Bean中非线程安全状态采用ThreadLocal进行处理，解决线程安全问题。
 
@@ -205,7 +167,7 @@ ThreadLocal和线程同步机制都是为了解决多线程中相同变量的访
 
 ThreadLocal会为每一个线程提供一个独立的变量副本，从而隔离了多个线程对数据的访问冲突。因为每一个线程都拥有自己的变量副本，从而也就没有必要对该变量进行同步了。ThreadLocal提供了线程安全的共享对象，在编写多线程代码时，可以把不安全的变量封装进ThreadLocal。
 
-**10-1、Spring基于xml注入bean的几种方式：**
+##**10-1、Spring基于xml注入bean的几种方式：**
 
 （1）Set方法注入；
 
@@ -217,7 +179,7 @@ ThreadLocal会为每一个线程提供一个独立的变量副本，从而隔离
 
 详细内容可以阅读：https://blog.csdn.net/a745233700/article/details/89307518
 
-**10-2、Spring的自动装配：**
+##**10-2、Spring的自动装配：**
 
 在spring中，对象无需自己查找或创建与其关联的其他对象，由容器负责把需要相互协作的对象引用赋予各个对象，使用autowire来配置自动装载模式。
 
@@ -251,7 +213,7 @@ ThreadLocal会为每一个线程提供一个独立的变量副本，从而隔离
 
 (2) @Resource默认是按照名称来装配注入的，只有当找不到与名称匹配的bean才会按照类型来装配注入。
 
-**11、Spring 框架中都用到了哪些设计模式？**
+##**11、Spring 框架中都用到了哪些设计模式？**
 
 （1）工厂模式：BeanFactory就是简单工厂模式的体现，用来创建对象的实例；
 
@@ -263,11 +225,11 @@ ThreadLocal会为每一个线程提供一个独立的变量副本，从而隔离
 
 （5）观察者模式：定义对象键一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都会得到通知被制动更新，如Spring中listener的实现--ApplicationListener。
 
-**12、Spring事务的实现方式和实现原理：**
+##**12、Spring事务的实现方式和实现原理：**
 
 Spring事务的本质其实就是数据库对事务的支持，没有数据库的事务支持，spring是无法提供事务功能的。真正的数据库层的事务提交和回滚是通过binlog或者redo log实现的。
 
-**（1）Spring事务的种类：**
+###**（1）Spring事务的种类：**
 
 spring支持编程式事务管理和声明式事务管理两种方式：
 
@@ -279,7 +241,7 @@ spring支持编程式事务管理和声明式事务管理两种方式：
 
 声明式事务管理要优于编程式事务管理，这正是spring倡导的非侵入式的开发方式，使业务代码不受污染，只要加上注解就可以获得完全的事务支持。唯一不足地方是，最细粒度只能作用到方法级别，无法做到像编程式事务那样可以作用到代码块级别。
 
-**（2）spring的事务传播行为：**
+###**（2）spring的事务传播行为：**
 
 spring事务的传播行为说的是，当多个事务同时存在的时候，spring如何处理这些事务的行为。
 
@@ -297,7 +259,7 @@ spring事务的传播行为说的是，当多个事务同时存在的时候，sp
 
 ⑦ PROPAGATION_NESTED：如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则按REQUIRED属性执行。
 
-**（3）Spring中的隔离级别：**
+###**（3）Spring中的隔离级别：**
 
 - 脏读：表示一个事务能够读到另一个事务中还未提交的数据。比如，某个事务尝试插入记录A，此时该事务还未提交，然后另一个事务尝试读取到了记录A
 - 不可重复读：是指一个事务内，多次读同一个事务
@@ -313,7 +275,7 @@ spring事务的传播行为说的是，当多个事务同时存在的时候，sp
 
 ⑤ ISOLATION_SERIALIZABLE：一个事务在执行的过程中完全看不到其他事务对数据库所做的更新。
 
-**13、Spring框架中有哪些不同类型的事件？**
+##**13、Spring框架中有哪些不同类型的事件？**
 
 Spring 提供了以下5种标准的事件：
 
@@ -329,7 +291,7 @@ Spring 提供了以下5种标准的事件：
 
 如果一个bean实现了ApplicationListener接口，当一个ApplicationEvent 被发布以后，bean会自动被通知。
 
-**14、解释一下Spring AOP里面的几个名词：**
+##**14、解释一下Spring AOP里面的几个名词：**
 
 （1）切面（Aspect）：被抽取的公共模块，可能会横切多个对象。 在Spring AOP中，切面可以使用通用类（基于模式的风格） 或者在普通类中以 @AspectJ 注解来实现。
 
@@ -347,7 +309,7 @@ Spring 提供了以下5种标准的事件：
 
 切入点（pointcut）和连接点（join point）匹配的概念是AOP的关键，这使得AOP不同于其它仅仅提供拦截功能的旧技术。 切入点使得定位通知（advice）可独立于OO层次。 例如，一个提供声明式事务管理的around通知可以被应用到一组横跨多个对象中的方法上（例如服务层的所有业务操作）。
 
-**15、Spring通知有哪些类型？**
+##**15、Spring通知有哪些类型？**
 
 https://blog.csdn.net/qq_32331073/article/details/80596084
 
@@ -393,7 +355,7 @@ afterThrowing:异常发生
 
 java.lang.RuntimeException: 异常发生
 
-**16、****Spring的循环依赖**
+##16、Spring的循环依赖
 
 三级缓存解决循环依赖
 
@@ -424,7 +386,7 @@ earlySingletonObjects，同时从三级缓存删除；所以此时缓存里是�
 3. **到此，B持有的已经是初始化完成的A，A持有的也是初始化完成的B，完美~**
 4. 总结：Spring通过将实例化后的对象提前暴露给Spring容器中的singletonFactories，解决了循环依赖的问题
 
-**三级缓存为什么是三级，去除第三级缓存行不行？**
+##17、**三级缓存为什么是三级，去除第三级缓存行不行？**
 
 第三级缓存的目的是为了延迟代理对象的创建，因为如果没有依赖循环的话，那么就不需要为其提前创建代理，可以将它延迟到初始化完成之后再创建。但是因为循环依赖的出现，导致了 Spring 不得不提前去创建代理，因为如果不提前创建代理对象，那么注入的就是原始对象，这样就会产生错误。
 

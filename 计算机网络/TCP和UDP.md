@@ -7,7 +7,7 @@
 
 ##UDP的报文段格式
 
-<img src=".\images\image-20201129145741909.png" alt="image-20201129145741909" style="zoom:150%;" />
+<img src="..\images\image-20201129145741909.png" alt="image-20201129145741909" style="zoom:150%;" />
 
 
 

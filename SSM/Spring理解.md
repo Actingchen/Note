@@ -713,47 +713,310 @@ AOP 本质上是==通过**预编译方式**和**运行期动态代理**实现在
 * 一个动态代理类 代理的是一个接口，一般就是对应的一类业务
 * 一个动态代理类 可以代理多个类 只要实现了同一个接口即可
 
+# 常用注解
+
+https://segmentfault.com/a/1190000021434929
+
+## 1）用于注册bean对象注解
+
+### 1.1 `@Component`
+
+**作用：**
+
+```
+调用无参构造创建一个bean对象，并把对象存入spring的IOC容器，交由spring容器进行管理。相当于在xml中配置一个bean。
+```
+
+**属性：**
+
+```
+value：指定bean的id。如果不指定value属性，默认bean的id是当前类的类名。首字母小写。
+```
+
+### 1.2 `@Controller`
+
+**作用：**
+
+```
+作用上与@Component。一般用于表现层的注解。
+```
+
+**属性：**
+
+```
+value：指定bean的id。如果不指定value属性，默认bean的id是当前类的类名。首字母小写。
+```
+
+### 1.3 `@Service`
+
+**作用：**
+
+```
+作用上与@Component。一般用于业务层的注解。
+```
+
+**属性：**
+
+```
+value：指定bean的id。如果不指定value属性，默认bean的id是当前类的类名。首字母小写。
+```
+
+### 1.4 `@Repository`
+
+**作用：**
+
+```
+作用上与@Component。一般用于持久层的注解。
+```
+
+**属性：**
+
+```
+value：指定bean的id。如果不指定value属性，默认bean的id是当前类的类名。首字母小写。
+```
+
+### 1.5 `@Bean`
+
+**作用：**
+
+```
+用于把当前方法的返回值作为bean对象存入spring的ioc容器中
+```
+
+**属性：**
+
+```
+name：用于指定bean的id。当不写时，默认值是当前方法的名称。注意：当我们使用注解配置方法时，如果方法有参数，spring框架会去容器中查找有没有可用的bean对象，查找的方式和Autowired注解的作用是一样的。
+```
+
+**案例：**
+
+```
+/**
+ * 获取DataSource对象
+ * @return
+ */
+@Bean(value = "dataSource")
+public DataSource getDataSource() {
+    try {
+        ComboPooledDataSource dataSource = new ComboPooledDataSource();
+        dataSource.setDriverClass(this.driver);
+        dataSource.setJdbcUrl(this.url);
+        dataSource.setUser(this.username);
+        dataSource.setPassword(this.password);
+        return dataSource;
+    }catch (Exception exception) {
+        throw new RuntimeException(exception);
+    }
+}
+```
+
+## 2）用于依赖注入的注解
+
+###  `@Autowired`
+
+**作用：**
+
+```
+@Autowire和@Resource都是Spring支持的注解形式动态装配bean的方式。Autowire默认按照类型(byType)装配，如果想要按照名称(byName)装配，需结合@Qualifier注解使用。
+```
+
+**属性：**
+
+```
+required：@Autowire注解默认情况下要求依赖对象必须存在。如果不存在，则在注入的时候会抛出异常。如果允许依赖对象为null，需设置required属性为false。
+```
+
+**案例：**
+
+```
+@Autowire 
+@Qualifier("userService") 
+private UserService userService;
+```
+
+###  `@Qualifier`
+
+**作用：**
+
+```
+在自动按照类型注入的基础之上，再按照 Bean 的 id 注入。它在给字段注入时不能独立使用，必须和 @Autowire一起使用；但是给方法参数注入时，可以独立使用。
+```
+
+**属性：**
+
+```
+value：用于指定要注入的bean的id，其中，该属性可以省略不写。
+```
+
+**案例：**
+
+```
+@Autowire
+@Qualifier(value="userService") 
+//@Qualifier("userService")     //value属性可以省略不写
+private UserService userService;
+
+//可能存在多个UserDao实例
+@Autowired 
+@Qualifier("userServiceImpl") 
+public IUserService userService; 
+或者
+
+@Autowired 
+public void setUserDao(@Qualifier("userDao") UserDao userDao) { 
+	this.userDao = userDao; 
+//可能不存在UserDao实例
+@Autowired(required = false) 
+public IUserService userService
+
+```
+
+###  `@Resource`
+
+**作用：**
+
+```
+@Autowire和@Resource都是Spring支持的注解形式动态装配bean的方式。@Resource默认按照名称(byName)装配，名称可以通过name属性指定。如果没有指定name，则注解在字段上时，默认取（name=字段名称）装配。如果注解在setter方法上时，默认取（name=属性名称）装配。
+```
+
+**属性：**
+
+```
+name：用于指定要注入的bean的id
+type：用于指定要注入的bean的type
+```
+
+**装配顺序**
+
+```
+1.如果同时指定name和type属性，则找到唯一匹配的bean装配，未找到则抛异常；
+2.如果指定name属性，则按照名称(byName)装配，未找到则抛异常；
+3.如果指定type属性，则按照类型(byType)装配，未找到或者找到多个则抛异常；
+4.既未指定name属性，又未指定type属性，则按照名称(byName)装配；如果未找到，则按照类型(byType)装配。
+```
+
+**案例：**
+
+```
+@Resource(name="userService")
+//@Resource(type="userService")
+//@Resource(name="userService", type="UserService")
+private UserService userService;
+```
+
+###  `@Value`
+
+**作用：**
+
+```
+通过@Value可以将外部的值动态注入到Bean中，可以为基本类型数据和String类型数据的变量注入数据
+```
+
+**案例：**
+
+```
+// 1.基本类型数据和String类型数据的变量注入数据
+@Value("tom") 
+private String name;
+@Value("18") 
+private Integer age;
 
 
+// 2.从properties配置文件中获取数据并设置到成员变量中
+// 2.1jdbcConfig.properties配置文件定义如下
+jdbc.driver \= com.mysql.jdbc.Driver  
+jdbc.url \= jdbc:mysql://localhost:3306/eesy  
+jdbc.username \= root  
+jdbc.password \= root
 
+// 2.2获取数据如下
+@Value("${jdbc.driver}")  
+private String driver;
 
+@Value("${jdbc.url}")  
+private String url;  
+  
+@Value("${jdbc.username}")  
+private String username;  
+  
+@Value("${jdbc.password}")  
+private String password;
+```
 
+## 3）用于改变bean作用范围的注解
 
-## 事务隔离级别
+###  `@Scope`
 
+**作用：**
 
+```
+指定bean的作用范围。
+```
 
-## 事务传播行为
+**属性：**
 
+```
+value：
+    1）singleton：单例
+    2）prototype：多例
+    3）request： 
+    4）session： 
+    5）globalsession：
+```
 
+**案例：**
 
-##依赖注入装配Bean 基于注解
+```
+@Autowire
+@Scope(value="prototype")
+private UserService userService;
+```
 
-- 注解：就是一个类，使用@注解名称
-- 开发中：使用注解 取代 xml配置文件。
-  1.`@Component取代<bean class="">`
-  `@Component("id") 取代 <bean id="" class="">`
-  2.web开发，提供3个@Component注解衍生注解（功能一样）取代
-  `@Repository ：dao层`
-  `@Service：service层`
-  `@Controller：web层`
-  3.依赖注入，给私有字段设值，也可以给setter方法设值
-  - 普通值：`@Value(" ")`
-  - 引用值：
-    `方式1：按照【类型】注入@Autowired方式2：按照【名称】注入1@Autowired@Qualifier("名称")方式3：按照【名称】注入2@Resource("名称")`
-    4.生命周期
-    `初始化：@PostConstruct销毁：@PreDestroy`
-    5.作用域
-    `@Scope("prototype") 多例`
+## 4）生命周期相关的注解
 
-###@Resource和@Autowired的区别
+### `@PostConstruct`
+
+**作用：**
+
+```
+指定初始化方法
+```
+
+**案例：**
+
+```
+@PostConstruct  
+public void init() {  
+    System.out.println("初始化方法执行");  
+}
+```
+
+### `@PreDestroy`
+
+**作用：**
+
+```
+指定销毁方法
+```
+
+**案例：**
+
+```
+@PreDestroy  
+public void destroy() {  
+    System.out.println("销毁方法执行");  
+}
+```
+
+##@Resource和@Autowired的区别
 
 * 都是用来自动装配的，都可以放在属性字段上
 * @Autowired通过byType的方式实现，而且必须要求这个对象存在！
 * @Resource 默认通过byname的方式实现，如果找不到名字，则通过byType实现！如果两个都找不到的情况下就报错。
 * 执行顺序不同
 
-###@Component相当于bean；有几个衍生注解，
+##@Component相当于bean；有几个衍生注解，
 
 * dao【@Repository】
 * service【@Service】
@@ -761,3 +1024,52 @@ AOP 本质上是==通过**预编译方式**和**运行期动态代理**实现在
 
 四个注解都是把类注册到spring容器中
 
+##@transactional
+
+spring支持编程式事务管理和声明式事务管理两种方式。
+
+* 编程式事务管理使用TransactionTemplate或者直接使用底层的PlatformTransactionManager。对于编程式事务管理，spring推荐使用TransactionTemplate。
+
+* 声明式事务管理建立在AOP之上的。其本质是对方法前后进行拦截，然后在目标方法开始之前创建或者加入一个事务，在执行完目标方法之后根据执行情况提交或者回滚事务。声明式事务最大的优点就是不需要通过编程的方式管理事务，这样就不需要在业务逻辑代码中掺杂事务管理的代码，只需在配置文件中做相关的事务规则声明(或通过基于@Transactional注解的方式)，便可以将事务规则应用到业务逻辑中。【一种是基于tx和aop名字空间的xml配置文件，另一种就是基于@Transactional注解。显然基于注解的方式更简单易用，更清爽。】
+
+显然声明式事务管理要优于编程式事务管理，这正是spring倡导的非侵入式的开发方式。声明式事务管理使业务代码不受污染，一个普通的POJO对象，只要加上注解就可以获得完全的事务支持。和编程式事务相比，声明式事务唯一不足地方是，后者的最细粒度只能作用到方法级别，无法做到像编程式事务那样可以作用到代码块级别。但是即便有这样的需求，也存在很多变通的方法，比如，可以将需要进行事务管理的代码块独立为方法等等。
+
+##@RequestMapping
+
+- *@GetMapping*
+- *@PostMapping*
+- *@PutMapping*
+- *@DeleteMapping*
+- *@PatchMapping*
+
+从命名约定我们可以看到每个注释都是为了处理各自的传入请求方法类型，即*@GetMapping*用于处理请求方法的*GET*类型，*@ PostMapping*用于处理请求方法的*POST*类型等。
+
+如果我们想使用传统的*@RequestMapping*注释实现URL处理程序，那么它应该是这样的：
+
+```java
+@RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
+```
+
+新方法可以简化为：
+
+```java
+@GetMapping("/get/{id}")
+```
+
+##@responseBody
+
+@responseBody注解的作用是将controller的方法返回的对象通过适当的转换器转换为指定的格式之后，写入到response对象的body区，通常用来返回JSON数据或者是XML
+
+　　数据，需要注意的呢，在使用此注解之后不会再走试图处理器，而是直接将数据写入到输入流中，他的效果等同于通过response对象输出指定格式的数据。
+
+##@RestController
+
+1. Controller, RestController的共同点
+
+都是用来表示Spring某个类的是否可以接收baiHTTP请求
+
+2.  Controller, RestController的不同点
+
+@Controller标识一个Spring类是Spring MVC controller处理器
+
+@RestController：  a convenience annotation that does nothing more than adding the@Controller and@ResponseBody annotations。  @RestController是@Controller和@ResponseBody的结合体，两个标注合并起来的作用。
