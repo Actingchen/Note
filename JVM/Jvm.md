@@ -222,7 +222,7 @@ Minor GC是指从新生代空间（包括 Eden 和 Survivor 区域）回收内�
 
 回收过程：采用复制算法
 
-首先把Eden区和Survivor From区域中存活的对象复制到Survivor To中（如果有对象的年龄达到了老年的标准，直接存在老年区），同时把这些对象的年龄+1（如果Survivor To内存不够了，就放到老年代）,然后在将Eden区和Survivor From区清理，最后Survivor From和Survivor To互换，Survivor To成为下一次GC时的Survivor From区，无论啥时候，都有一块空闲的Survivor区。
+首先把**Eden区和Survivor From区域中存活的对象复制到Survivor To中**（如果有对象的年龄达到了老年的标准，直接存在老年区），同时把这些对象的年龄+1（如果Survivor To内存不够了，就放到老年代）,然后在将Eden区和Survivor From区清理，最后Survivor From和Survivor To互换，Survivor To成为下一次GC时的Survivor From区，无论啥时候，都有一块空闲的Survivor区。
 
 触发条件：
 (1)当Eden区满时。
@@ -249,29 +249,104 @@ Major GC/Full GC 区别不大
 
 #回收策略
 
+新生代里分为伊甸园区 幸存区from 幸存区to
+
+老年代
+
+经历一次gc 年龄就加1
+
 1. 对象优先在堆的 Eden 区分配。 
 2. 大对象直接进入老年代. 
-3.  长期存活的对象将直接进入老年代. 当 Eden 区没有足够的空间进行分配时，虚拟机会执行一次 Minor GC.Minor Gc 通 常发生在新生代的 Eden 区，在这个区的对象生存期短，往往发生 Gc 的频率较高， 回收速度比较快;Full Gc/Major GC 发生在老年代，一般情况下，触发老年代 GC 的时候不会触发 Minor GC,但是通过配置，可以在 Full GC 之前进行一次 Minor GC 这样可以加快老年代的回收速度。
+3. 长期存活的对象，比如默认阈值年龄，最大是15，将直接进入老年代. 当 Eden 区没有足够的空间进行分配时，虚拟机会执行一次 Minor GC.Minor Gc 通 常发生在新生代的 Eden 区，在这个区的对象生存期短，往往发生 Gc 的频率较高， 回收速度比较快;Full Gc/Major GC 发生在老年代，一般情况下，触发老年代 GC 的时候不会触发 Minor GC,但是通过配置，可以在 Full GC 之前进行一次 Minor GC 这样可以加快老年代的回收速度。
 
 # stw
 
-   1.Serial GC：Full GC整个过程STW，Young GC整个过程STW
+gc都会触发stw，暂停其他用户线程
 
-2. Parallel GC：Full GC整个过程STW，Young GC整个过程STW
+minor gc比较少时间，full gc stw 时间比较长
 
-3. CMS GC：Full GC整个过程STW，Young GC整个过程STW，Old GC只有两个小阶段STW
+# 调优
 
-4. G1 GC：Full GC整个过程STW，Young GC整个过程STW，Mixed GC由全局并发标记和对象复制组成，全局并发标记其中两个小阶段STW，其它并发
+###基本堆参数
 
-5. Shenandoah GC/ZGC：它们都是回收堆的一部分，所以没有Full GC（Full GC是指回收整个堆，与之相对的是Partial GC，比如CMS GC的Old GC和G1的Mixed GC均属于此类）的概念
+![image-20210207155522914](C:\Users\11468\AppData\Roaming\Typora\typora-user-images\image-20210207155522914.png)**新生代 ( Young ) 与老年代 ( Old ) 的比例的值为 1:2 ( 该值可以通过参数 –XX:NewRatio 来指定 )**
+
+Edem : from : to = 8 : 1 : 1 ( 可以通过参数 –XX:SurvivorRatio 来设定 )
+
+### GC 调优
+
+查看虚拟机参数命令
+
+```
+"F:\JAVA\JDK8.0\bin\java" -XX:+PrintFlagsFinal -version | findstr "GC"Copy
+```
+
+可以根据参数去查询具体的信息
+
+#### 调优领域
+
+- 内存
+- 锁竞争
+- CPU占用
+- IO
+- GC
+
+#### 确定目标
+
+低延迟/高吞吐量？ 选择合适的GC
+
+- CMS G1 ZGC
+- ParallelGC
+- Zing
+
+#### 最快的GC是不发生GC
+
+首先排除减少因为自身编写的代码而引发的内存问题
+
+- 查看Full GC前后的内存占用，考虑以下几个问题
+  - 数据是不是太多？
+  - 数据表示是否太臃肿
+    - 对象图
+    - **对象大小**
+  - 是否存在内存泄漏 static Map map 解决方法 软引用、弱引用 缓存用第三方缓存实现不耗费自己的内存
+
+#### 新生代调优
+
+- 新生代的特点
+  - 所有的new操作分配内存都是非常廉价的
+    - TLAB
+  - 死亡对象回收零代价
+  - 大部分对象用过即死（朝生夕死）
+  - MInor GC 所用时间远小于Full GC
+- 新生代内存越大越好么？
+  - 不是
+    - 新生代内存太小：频繁触发Minor GC，会STW，会使得吞吐量下降
+    - 新生代内存太大：老年代内存占比有所降低，会更频繁地触发Full GC。而且触发Minor GC时，清理新生代所花费的时间会更长
+  - **新生代内存设置为内容纳[并发量*(请求-响应)]的数据为宜**
+
+#### 幸存区调优
+
+- 幸存区需要能够保存 **当前活跃对象**+**需要晋升的对象**
+- 晋升阈值配置得当，让长时间存活的对象尽快晋升，让活跃但存活时间短的保存
+
+#### 老年代调优
 
 # 垃圾回收算法
 
-
+pdf
 
 # cms
 
-
+pdf
 
 # G1
 
+pdf
+
+补充：
+
+同时注重吞吐量和低延迟，默认暂停目标是200ms,jdk9默认垃圾回收器
+
+超大堆内存，会把堆划分为多个大小相等的区
+
+整体上是标记+整理算法，两个区之间是复制算法
