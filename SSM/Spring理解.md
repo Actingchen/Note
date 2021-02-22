@@ -1,132 +1,24 @@
 #Spring
 
-## Spring context
-
-类似进程在执行程序（不管是用户程序还是内核中的程序）时，都会依赖一个上下文，这个上下文提供我们运行时需要的一些数据和保存运行时的一些数据。如果执行中遇到了中断，CPU会从用户态切换到内核态，此时进程处于的进程上下文会被切换到中断上下文中，从而可以根据中断号去执行相应的中断程序。
-
-spring的ioc也是程序，它的执行也需要一个上下文。spring context就是spring的上下文。spring context是在core封装包基础上的context封装包，提供了一种框架式的对象访问方法。
-
-主要包括：
-
-- DefaultListableBeanFactory
-  这就是大家常说的 ioc 容器，它里面有很多 map、list。spring 帮我们创建的 singleton 类型的 bean 就存放在其中一个 map 中。我们定义的监听器（ApplicationListener）也被放到一个 Set 集合中。
-- BeanDefinitionRegistry
-  把一个 BeanDefinition 放到 beanDefinitionMap。
-- AnnotatedBeanDefinitionReader
-  针对 AnnotationConfigApplicationContext 而言。一个 BeanDefinition 读取器。
-- 扩展点集合
-  存放 spring 扩展点（主要是 BeanFactoryPostProcessor、BeanPostProcessor）接口的 list 集合。
-
-
-
-
-
-**初始化和启动**
-
-我们平时常说的spring 启动其实就是调用 AbstractApplicationContext#refresh 完成 spring context 的初始化和启动过程。spring context 初始化从开始到最后结束以及启动，这整个过程都在 refresh 这个方法中。refresh 方法刚开始做的是一些 spring context 的准备工作，也就是 spring context 的初始化，比如：创建 BeanFactory、注册 BeanFactoryPostProcessor 等，只有等这些准备工作做好以后才去开始 spring context 的启动。
-
-与现实生活联系一下，你可以把初始化理解为准备原料（对应到编程中就是创建好一些数据结构，并为这些数据结构填充点数据进去），等准备了你才能去真正造玩偶、造东西呀（对应到编程中就是执行算法）。在编程中数据结构与算法是分不开的也是这个道理呀，它们相互依赖并没有严格的界限划分。
-
- **运行**
-
-spring context 启动后可以提供它的服务的这段时间。
-
-**关闭/销毁**
-
-不需要用 spring context ，关闭它时，其实对应到代码上就是 acaContext.close();
-
-> 用户态和内核态
->
-> 内核态（Kernel Mode）：运行操作系统程序，操作硬件
->
-> 用户态（User Mode）：运行用户程序
->
-> 指令区别：
->
-> 特权指令：只能由操作系统使用、用户程序不能使用的指令。 举例：启动I/O 内存清零 修改程序状态字 设置时钟 允许/禁止终端 停机
->
-> 非特权指令：用户程序可以使用的指令。 举例：控制转移 算数运算 取数指令 **访管指令**（使用户程序从用户态陷入内核态）
->
-> 特权级别：
->
-> R0相当于内核态，R3相当于用户态；
->
-> 区别：
->
-> - 处于用户态执行时，进程所能访问的内存空间和对象受到限制，其所处于占有的处理器是可被抢占的
-> - 处于内核态执行时，则能访问所有的内存空间和对象，且所占有的处理器是不允许被抢占的。
->
-> 用户态什么时候变成内核态：
->
-> 1、系统调用
->
-> 2、异常
->
-> 3、外围设备的中断
-
 **扫盲**
 
 https://javadoop.com/post/spring-ioc
 
-
-
-![](https://www.javadoop.com/blogimages/spring-context/1.png)
-
-```java
-ApplicationContext context = new ClassPathXmlApplicationContext("classpath:applicationfile.xml");
-
-ApplicationContext ctx=new FileSystemXmlApplicationContext( "G:/Test/applicationcontext.xml ");   
-
-```
-
->获取ApplicationContext：
->
->**ClassPathXmlApplicationContext**从classpath下加载配置文件(适合于相对路径方式加载)
->
->**FileSystemXmlApplicationContext** 的构造函数需要一个 xml 配置文件在系统中的路径，即从文件绝对路径加载配置文件，其他和 ClassPathXmlApplicationContext 基本上一样。
->
->WebXmlApplicationContext：此容器加载一个XML文件，此文件定义了一个WEB应用的所有 bean。
->
->**AnnotationConfigApplicationContext** 是基于注解来使用的，它不需要配置文件，采用 java 配置类和各种注解来配置，简洁简单
-
-> BeanFactory，从名字上也很好理解，生产 bean 的工厂，它负责生产和管理各个 bean 实例。
-
-> BeanDefinition 中保存了我们的 Bean 信息，比如这个 Bean 指向的是哪个类、是否是单例的、是否懒加载、这个 Bean 依赖了哪些 Bean 等等。
-
-> Spring IoC容器允许BeanFactoryPostProcessor在容器实例化任何bean之前读取bean的定义(配置元数据)，并可以修改它。同时可以定义BeanFactoryPostProcessor，通过设置’order’属性来确定各个BeanFactoryPostProcessor执行顺序。    注册一个BeanFactoryPostProcessor实例需要定义一个Java类来实现BeanFactoryPostProcessor接口，并重写该接口的postProcessorBeanFactory方法。通过beanFactory可以获取bean的定义信息，并可以修改bean的定义信息。这点是和BeanPostProcessor最大区别,
-
-![](https://www.javadoop.com/blogimages/spring-context/2.png)
-
-1. ApplicationContext 继承了 ListableBeanFactory，这个 Listable 的意思就是，通过这个接口，我们可以获取多个 Bean，大家看源码会发现，最顶层 BeanFactory 接口的方法都是获取单个 Bean 的。
-2. ApplicationContext 继承了 HierarchicalBeanFactory，Hierarchical 单词本身已经能说明问题了，也就是说我们可以在应用中起多个 BeanFactory，然后可以将各个 BeanFactory 设置为父子关系。
-3. AutowireCapableBeanFactory 这个名字中的 Autowire 大家都非常熟悉，它就是用来自动装配 Bean 用的，但是仔细看上图，ApplicationContext 并没有继承它，不过不用担心，不使用继承，不代表不可以使用组合，如果你看到 ApplicationContext 接口定义中的最后一个方法 getAutowireCapableBeanFactory() 就知道了。
-4. ConfigurableListableBeanFactory 也是一个特殊的接口，看图，特殊之处在于它继承了第二层所有的三个接口，而 ApplicationContext 没有。这点之后会用到。
-
 ## IOC
 
-由于获取资源（数据库、读取文件、对象），类内部主动创建依赖对象，从而导致类与类之间高耦合,局部变更可能影响全部，直到IOC/DI出现。
+由于获取资源（数据库、读取文件、对象），类内部主动创建依赖对象，从而导致类与类之间高耦合,局部变更会影响到全部，ioc相当于在他们耦合关系之间加了一层，现在IOC利用反射机制把创建对象的控制权交给Spring IOC容器来创建（时机）、管理（对象的生命周期）、装配（通过依赖注入，配置对象）。spring通过依赖注入实现ioc。
 
-* **IOC**：以前创建对象是由程序主动创建对象、主动去控制获取依赖对象，类之间耦合度高，难于测试，现在IOC利用反射机制把创建对象的控制权交给Spring IOC容器来创建（时机）、管理（对象的生命周期）、装配（通过依赖注入，配置对象）。
-* **DI Dependency Injection** 依赖注入：容器能知道哪个组件（类）运行的时候，需要或者说是依赖另一个类（组件）；容器通过反射的形式，将准备好的BookService对象注入（利用反射给属性赋值）到BookServlet中。
-
-IoC 是设计思想，DI 是具体的实现方式；
-
-IoC 是理论，DI 是实践；
-
-从而实现对象之间的解藕。
+> IoC 是设计思想，DI 是具体的实现方式；
 
 **当然，IoC 也可以通过其他的方式来实现，而 DI 只是 Spring 的选择。**
 
-IoC 和 DI 也并非 Spring 框架提出来的，Spring 只是应用了这个设计思想和理念到自己的框架里去。
-
 ### IOC优点
 
-* 对程序最小的代价和最小的入侵性实现松散耦合
-* 由于降低了耦合，测试更容易了
+* 降低了耦合
 * IOC容器支持加载服务的饿汉式初始化和懒加载
 * 不用关注对象的创建具体实现，我们只需要预先配置好，需要的时候使用即可，没有IOC的话我们需要底层查看并按要求用构造参数创建
 
-本质上用的是工厂模式和反射机制
+本质上用的是**工厂模式和反射机制**
 
 举个例子
 
@@ -171,19 +63,8 @@ class Client {
 * 依赖检查
 * 自动装配
 * 指定初始化方法和销毁方法
-* 支持回调某些方法，但是需要实现spring接口
 
-其中，最重要的就是依赖注入，从 XML 的配置上说，即 ref 标签。对应 Spring RuntimeBeanReference 对 象。 对于 IoC 来说，最重要的就是容器。容器管理着 Bean 的生命周期，控制着 Bean 的依赖注入
-
-### DI的优点
-
-* 查找定位操作与应用代码完全无关。 
-
-* 不依赖于容器的API，可以很容易地在任何容器以外使用应用对象。 
-
-* 不需要特殊的接口，绝大多数对象可以做到完全不必依赖容器。
-
-### DI的注入实现方式
+###依赖注入
 
 依赖注入是时下最流行的IoC实现方式，依赖注入分为接口注入（Interface Injection），Setter方法注入 （Setter Injection）和构造器注入（Constructor Injection）三种方式。
 
@@ -204,16 +85,15 @@ Setter方法注入：Setter方法注入是容器通过调用无参构造器或�
 
 ### Springbean 作用域/对象的生命周期
 
-- Singleton，这是 Spring 的默认作用域，也就是为每个 IOC 容器创建唯一的一个 Bean 实例。
-- Prototype，针对每个 getBean 请求，容器都会单独创建一个 Bean 实例。
+（1）singleton：默认，每个 IOC 容器创建中只有一个bean的实例，单例的模式由BeanFactory自身来维护。（适用于无状态的bean场景，减少频繁创建）
 
-从 Bean 的特点来看，Prototype 适合有状态的 Bean，而 Singleton 则更适合无状态的情况。另外，使用 Prototype 作用域需要经过仔细思考，毕竟频繁创建和销毁 Bean 是有明显开销的。
+（2）prototype：为每一个bean请求提供一个实例。（适用于有状态的bean场景）
 
-如果是 Web 容器，则支持另外三种作用域：
+（3）request：每一次HTTP请求都会产生一个新的bean，该bean仅在当前HTTP request内有效。
 
-- Request，为每个 HTTP 请求创建单独的 Bean 实例。
-- Session，很显然 Bean 实例的作用域是 Session 范围。
-- GlobalSession，用于 Portlet 容器，因为每个 Portlet 有单独的 Session，GlobalSession 提供一个全局性的 HTTP Session。
+（4）session：每一次HTTP请求都会产生一个新的 bean，该bean仅在当前 HTTP session 内有效。
+
+（5）global-session：全局作用域，global-session和Portlet应用相关。表示所有的portlet共用全局的存储变量。
 
 ###SpringIOC Bean加载 存储 获取
 
@@ -308,13 +188,13 @@ public class B {
 >
 > 两者的区别是：有状态的bean都使用Prototype作用域，无状态的一般都使用singleton单例作用域。
 >
-> 对于“prototype”作用域Bean，Spring容器无法完成依赖注入，因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean。
+> 对于“prototype”作用域Bean，Spring容器无法完成依赖注入，**因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean。**
 >
 > @Lazy无法解决，当你真正使用到它（初始化）的时候，依旧会报异常UnsatisfiedDependencyException: Error creating bean with name 
 
 
 
-Spring创建Bean的流程
+###Spring创建Bean的流程
 
 **AbstractBeanFactory的getBean跟doGetBean方法**
 
@@ -1032,7 +912,7 @@ spring支持编程式事务管理和声明式事务管理两种方式。
 
 * 声明式事务管理建立在AOP之上的。其本质是对方法前后进行拦截，然后在目标方法开始之前创建或者加入一个事务，在执行完目标方法之后根据执行情况提交或者回滚事务。声明式事务最大的优点就是不需要通过编程的方式管理事务，这样就不需要在业务逻辑代码中掺杂事务管理的代码，只需在配置文件中做相关的事务规则声明(或通过基于@Transactional注解的方式)，便可以将事务规则应用到业务逻辑中。【一种是基于tx和aop名字空间的xml配置文件，另一种就是基于@Transactional注解。显然基于注解的方式更简单易用，更清爽。】
 
-显然声明式事务管理要优于编程式事务管理，这正是spring倡导的非侵入式的开发方式。声明式事务管理使业务代码不受污染，一个普通的POJO对象，只要加上注解就可以获得完全的事务支持。和编程式事务相比，声明式事务唯一不足地方是，后者的最细粒度只能作用到方法级别，无法做到像编程式事务那样可以作用到代码块级别。但是即便有这样的需求，也存在很多变通的方法，比如，可以将需要进行事务管理的代码块独立为方法等等。
+和编程式事务相比，声明式事务唯一不足地方是，它的最细粒度只能作用到方法级别，无法做到像编程式事务那样可以作用到代码块级别。但是即便有这样的需求，也存在很多变通的方法，比如，可以将需要进行事务管理的代码块独立为方法等等。
 
 ##@RequestMapping
 

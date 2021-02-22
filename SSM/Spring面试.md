@@ -145,15 +145,15 @@ Spring上下文中的Bean生命周期也类似，
 
 Spring容器中的bean可以分为5个范围：
 
-（1）singleton：默认，每个容器中只有一个bean的实例，单例的模式由BeanFactory自身来维护。
+（1）singleton：默认，每个 IOC 容器创建中只有一个bean的实例，单例的模式由BeanFactory自身来维护。（适用于无状态的bean场景，减少频繁创建）
 
-（2）prototype：为每一个bean请求提供一个实例。
+（2）prototype：为每一个bean请求提供一个实例。（适用于有状态的bean场景）
 
-（3）request：为每一个网络请求创建一个实例，在请求完成以后，bean会失效并被垃圾回收器回收。
+（3）request：每一次HTTP请求都会产生一个新的bean，该bean仅在当前HTTP request内有效。
 
-（4）session：与request范围类似，确保每个session中有一个bean的实例，在session过期后，bean会随之失效。
+（4）session：每一次HTTP请求都会产生一个新的 bean，该bean仅在当前 HTTP session 内有效。
 
-（5）global-session：全局作用域，global-session和Portlet应用相关。当你的应用部署在Portlet容器中工作时，它包含很多portlet。如果你想要声明让所有的portlet共用全局的存储变量的话，那么这全局变量需要存储在global-session中。全局作用域与Servlet中的session作用域效果相同。
+（5）global-session：全局作用域，global-session和Portlet应用相关。表示所有的portlet共用全局的存储变量。
 
 ##**8、Spring框架中的单例Beans是线程安全的么？**
 
@@ -245,7 +245,7 @@ spring支持编程式事务管理和声明式事务管理两种方式：
 
 spring事务的传播行为说的是，当多个事务同时存在的时候，spring如何处理这些事务的行为。
 
-① **PROPAGATION_REQUIRED**：如果当前没有事务，就创建一个新事务，如果当前存在事务，就加入该事务，该设置是最常用的设置。	
+① **PROPAGATION_REQUIRED**：如果当前存在事务，就加入该事务，如果当前没有事务，就创建一个新事务。该设置是最常用的设置。	
 
 ② PROPAGATION_SUPPORTS：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就以非事务执行。‘
 
@@ -261,19 +261,19 @@ spring事务的传播行为说的是，当多个事务同时存在的时候，sp
 
 ![image-20210206211415043](C:\Users\11468\AppData\Roaming\Typora\typora-user-images\image-20210206211415043.png)
 
-###**（3）Spring中的隔离级别：**
+###**（3）Spring中的事务隔离级别：**
 
 - 脏读：表示一个事务能够读到另一个事务中还未提交的数据。比如，某个事务尝试插入记录A，此时该事务还未提交，然后另一个事务尝试读取到了记录A
-- 不可重复读：是指一个事务内，多次读同一个事务
+- 不可重复读：是指一个事务内，多次读同一个数据，但结果值不一样。
 - 幻读：指同一个事务内多次查询返回的结果集不一样。比如同一个事务A第一次查询发现有n条记录，但是第二次同等条件下查询却有n+1条记录，这就是发生了幻读，这是因为被另一个事务增加删除修改了，所以查询的结果变了。
 
 ① ISOLATION_DEFAULT：这是个 PlatfromTransactionManager 默认的隔离级别，使用数据库默认的事务隔离级别。
 
-② ISOLATION_READ_UNCOMMITTED：读未提交，允许另外一个事务可以看到这个事务未提交的数据。
+② ISOLATION_READ_UNCOMMITTED：读未提交，允许事务读取未被其他事务提交的变更数据。会出现脏读、不可重复读和幻读问题。
 
-③ ISOLATION_READ_COMMITTED：读已提交，保证一个事务修改的数据提交后才能被另一事务读取，而且能看到该事务对已有记录的更新。
+③ ISOLATION_READ_COMMITTED：读已提交，只允许事务读取已经被其他事务提交的变更数据。可避免脏读，仍会出现不可重复读和幻读问题。
 
-④ ISOLATION_REPEATABLE_READ：可重复读，保证一个事务修改的数据提交后才能被另一事务读取，但是不能看到该事务对已有记录的更新。
+④ ISOLATION_REPEATABLE_READ：可重复读，一个事务执行过程中看到的数据，总是跟这个事务在启动时看到的数据是一致的。也是不能看到该事务对已有记录的更新。可以避免脏读和不可重复读，仍会出现幻读问题。
 
 ⑤ ISOLATION_SERIALIZABLE：一个事务在执行的过程中完全看不到其他事务对数据库所做的更新。
 

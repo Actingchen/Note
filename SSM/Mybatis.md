@@ -58,7 +58,7 @@ public class DbUtil {
 
 ## \#与$的区别
 
-- sql注入，比如查询时select * from user where name=="张"【or 1\=\=1】
+- sql注入，比如查询时select * from user where name="张"[or 1\=1]
 
 - \#{} 是经过预编译的 替换预编译语句(PrepareStatement)中的占位符【推荐使用】SQL预编译是JDBC中的PreparedStatement类在起作用，PreparedStatement是Statement的子类，它的对象包含了编译好的SQL语句。这种“准备好”的方式不仅能提高安全性，而且在多次执行同一个SQL时，能够提高效率。原因是SQL已编译好，再次执行时无需再编译了。
 
@@ -74,4 +74,4 @@ public class DbUtil {
   INSERT INTO user (name) VALUES ('kuangshen');
   ```
 
-- $ {} 这样格式的参数会直接参与SQL编译，从而不能避免注入攻击。但涉及到动态表名和列名时，只能使用${}这样的参数格式。所以，这样的参数需要我们在代码中手工进行过滤处理来防止注入。
+  \$ {} 这样格式的参数会直接参与SQL编译，从而不能避免注入攻击。但涉及到动态表名和列名时，只能使用${}这样的参数格式。所以，这样的参数需要我们在代码中手工进行过滤处理来防止注入。
