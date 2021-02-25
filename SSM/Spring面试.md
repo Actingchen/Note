@@ -32,7 +32,7 @@ Spring MVC：提供面向Web应用的Model-View-Controller实现。
 
 （4）spring对于主流的应用框架提供了集成支持。
 
-##**3、Spring的AOP理解：**
+##>**3、Spring的AOP理解：**
 
 OOP面向对象，允许开发者定义纵向的关系，但并适用于定义横向的关系，导致了大量代码的重复，而不利于各个模块的重用。
 
@@ -44,7 +44,7 @@ AOP实现的关键在于 代理模式，AOP代理主要分为静态代理和动�
 
 （2）Spring AOP使用的动态代理，所谓的动态代理就是说AOP框架不会去修改字节码，而是每次运行时在内存中临时为方法生成一个AOP对象，这个AOP对象包含了目标对象的全部方法，并且在特定的切点做了增强处理，并回调原对象的方法。
 
-###Spring AOP中的动态代理主要有两种方式，JDK动态代理和CGLIB动态代理：
+###>Spring AOP中的动态代理主要有两种方式，JDK动态代理和CGLIB动态代理：
 
 ①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，InvocationHandler 通过invoke方法反射来调用目标类中的代码，动态地将横切逻辑和业务编织在一起；接着，Proxy利用 InvocationHandler动态创建一个符合某一接口的的实例, 生成目标类的代理对象。
 
