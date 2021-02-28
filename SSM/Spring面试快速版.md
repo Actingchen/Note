@@ -6,6 +6,85 @@
 
 > IoC 是设计思想，DI 是具体的实现方式；
 
+Spring的IoC容器在实现控制反转和依赖注入的过程中,可以划分为两个阶段:
+
+容器启动阶段    Bean实例化阶段
+
+这两个阶段中,IoC容器分别作了以下这些事情:
+
+![img](https://t10.baidu.com/it/u=217002030,1143584708&fm=173&app=25&f=JPEG?w=503&h=289&s=5E283463318E49494E5DE0DE000080B1)
+
+##spring ioc 创建bean的过程？
+
+https://baijiahao.baidu.com/s?id=1613047743708688271&wfr=spider&for=pc
+
+简书：https://www.jianshu.com/p/1c2dbb1cc900
+
+在BeanFactory容器中，每一个注入对象都对应一个**BeanDefinition**实例对象，该实例对象负责保存注入对象的所有必要信息，包括其对应的对象的class类型、是否是抽象类、构造方法参数以及其他属性等
+
+专门加载解析BeanDefinitionReader，对应到xml配置文件，就是他的子类XmlBeanDefinitionReader，XmlBeanDefinitionReader负责读取Spring指定格式的XML配置文件并解析，之后将解析后的文件内容映射到相应的BeanDefinition。
+
+**AbstractBeanFactory提供了getBean的主流程**
+
+beanName处理
+
+如果要获取FactoryBean对象本身，需要传递 `&BeanName`，但是再获取bean的时候，需要暂时去掉`&`，然后需要递归将alias彻底转换为对应的beanId去创建获取Bean实例
+
+从缓存中获取Bean
+
+单例bean是全局唯一的，spring缓存了所有已经创建的单例bean，所以在获取bean的时候，会首先去缓存中查找，如果找到，直接使用。在创建单例bean的时候如果存在依赖注入，为了避免循环依赖，spring创建bean的时候不等bean的依赖全部set上就会提前将创建bean的ObjectFactory提前添加到缓存中,一旦下个bean创建的时候需要依赖这个bean则直接将ObjectFactory进行set依赖。
+
+**DefaultSingletonBeanRegistry提供了从缓存获取bean的功能**
+
+当当前容器不存在对应beanName的BeanDefinition时，尝试去父类容器获取bean
+
+如果bean配置了 `depend-on`则再实例化该bean之前需要实例化这些依赖
+
+判断BeanDefinition中配置是单例模式，则进行单例实体创建流程。调用getSingleton方法，传递一个ObjectFactory对象
+
+调用DefaultSingletonBeanRegistry的getSingletion方法
+
+调用AbstractAutowireCapableBeanFactory中的**createBean方法**
+
+在进行实例化前，可以通过【BeanPostProcessor】在创建之前改变bean，如果经过这个处理器返回的结果不为空，会直接忽略后续的Bean的创建而直接返回。AOP就是基于这实现的
+
+如果后置处理器没有返回一个实例对象，这时 进入实例化bean的方法,bean的初始化**doCreateBean**，第一步首先要创建一个对象 **createBeanInstance**，。创建对象主要分两种，一种是通过工厂方法创建(优先级高)，另一种就是通过构造器反射创建
+
+将反射创建的对象添加到缓存中，注意这个时候该bean还未进行依赖注入，这样在循环依赖中，其他bean就可以将未依赖注入的这个bean注入。而之后在将该bean的依赖注入后，bean的地址不会变。只是某些属性变化，不会影响。所以只有setter注入的单例模式bean才能解决循环依赖问题。
+
+AOP就是在这里将advice动态注入bean中的，使用SmartInstantiationAwareBeanPostProcessor
+
+**populateBean**，依赖注入,属性注入前，应用后置处理器,如果后置处理器有了设置 那么不再继续属性注入，直接停止返回，否则自动装配，@Autowire就是在这里实现的
+
+注册销毁方法：对于非web项目要想使在bean容器关闭的时候执行bean的销毁方式需要注册一个关闭钩子context.registerShutdownHook()。
+
+FactoryBean接口，实现该接口可以通过getObject方法创建自己想要的bean对象。在初始化bean的时候，如果bean实现类了FactoryBean接口，则是返回getObject方法返回的对象，而不是创建实现FactoryBean接口的对象，
+
+获取FactoryBean的getObject方法中定义的实体对象，如果定义的 isSingleton() 返回的是true，则会将获取到的bean添加到一个缓存factoryBeanObjectCache中，保证单例。
+
+spring容器原则上保证容器中所有的bean都应用【BeanPostProcessor】的postProcessAfterInitialization处理器
+
+调用 FactoryBean的getObject方法获取对象。如果没有实现这个接口，那就**Initialization**方法
+
+
+
+##new 一个对象的过程？
+
+> 1. 当虚拟机遇到一条new指令时候，首先去检查这个指令的参数是否能 **在常量池中能否定位到一个类的符号引用** （即类的带路径全名），并且检查这个符号引用代表的类是否已被加载、解析和初始化过，即**验证是否是第一次使用该类**。如果没有（不是第一次使用），那必须先执行相应的类加载过程（class.forname()）。
+> 2. 在类加载检查通过后，接下来虚拟机将 **为新生的对象分配内存** 。对象所需的内存的大小在类加载完成后便可以完全确定，为对象分配空间的任务等同于把一块确定大小的内存从Java堆中划分出来，目前常用的有两种方式，根据使用的垃圾收集器的不同使用不同的分配机制：2.1. **指针碰撞**（Bump the Pointer）：假设Java堆的内存是绝对规整的，所有用过的内存都放一边，空闲的内存放在另一边，中间放着一个指针作为分界点的指示器，那所分配内存就仅仅把那个指针向空闲空间那边挪动一段与对象大小相等的距离。2.2. **空闲列表**（Free List）：如果Java堆中的内存并不是规整的，已使用的内存和空间的内存是相互交错的，虚拟机必须维护一个空闲列表，记录上哪些内存块是可用的，在分配时候从列表中找到一块足够大的空间划分给对象使用。
+> 3. 内存分配完后，虚拟机需要将分配到的内存空间中的数据类型都 **初始化为零值（不包括对象头）**；
+> 4. 虚拟机要 **对对象头进行必要的设置** ，例如这个对象是哪个类的实例（即所属类）、如何才能找到类的元数据信息、对象的哈希码、对象的GC分代年龄等信息，这些信息都存放在对象的对象头中。至此，从虚拟机视角来看，一个新的对象已经产生了。但是在Java程序视角来看，执行new操作后会接着执行如下步骤：
+> 5. **调用对象的init()方法** ,根据传入的属性值给对象属性赋值。
+> 6. 在线程 **栈中新建对象引用** ，并指向堆中刚刚新建的对象实例。
+
+接口注入。不提倡。因为它强制被注入对象实现不必要的接口，带有侵入性。
+
+构造方法注入。这种注入方式的优点就是，对象在构造完成之后，即已进入就绪状态，可以马上使用。缺点就是，当依赖对象比较多的时候，构造方法的参数列表会比较长。而通过反射构造对象的时候，对相同类型的参数的处理会比较困难，维护和使用上也比较麻烦。而且在Java中，构造方法无法被继承，无法设置默认值。对于非必须的依赖处理，可能需要引入多个构造方法，而参数数量的变动可能造成维护上的不便。
+
+setter方法注入。setter方法可以被继承，允许设置默认值。缺点当然就是对象无法在构造完成后马上进入就绪状态。
+
+
+
 # AOP
 
 **--代理模式：Spring的AOP功能用到了JDK的动态代理和CGLIB字节码生成技术--**
@@ -20,9 +99,17 @@ AOP实现的关键在于 代理模式，AOP代理主要分为静态代理和动�
 
 ##jdk动态代理和cglib动态代理
 
->①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，InvocationHandler 通过invoke方法反射来调用目标类中的代码，动态地将横切逻辑和业务编织在一起；接着，Proxy利用 InvocationHandler动态创建一个符合某一接口的的实例, 生成目标类的代理对象。
+>①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，需要先实现一个``InvocationHandler``去定义我们方法的增强策略，然后拿这个handler去Proxy newProxyInstance去动态生成字节码，生成代理类，最后创建一个代理对象出来，这个代理对象会对方法进行增强之后反射调用真实对象的方法。动态生成的代理类继承了Proxy类，由于Java的单继承，所以如果没有提供接口的话就无法使用jdk动态代理。
+>
+>* 注意：生成的代理类的成员变量是Method，调用方法的时候会拿着这个Method去到``InvocationHandler``调用invoke方法，这个handler就是我们定义的handler。
 
 > ②如果代理类没有实现 InvocationHandler 接口，那么Spring AOP会选择使用CGLIB来动态代理目标类。CGLIB（Code Generation Library），是一个代码生成的类库，可以在运行时动态的生成指定类的一个子类对象，并覆盖其中特定方法并添加增强代码，从而实现AOP。CGLIB是通过继承的方式做的动态代理，因此如果某个类被标记为final，那么它是无法使用CGLIB做动态代理的。
+
+#BeanFactory 和 FactoryBean的区别
+
+BeanFactory是一个容器是一个顶层接口，为Spring管理Bean提供了一套通用规范，BeanFactory用来存储Bean的注册信息，用来实例化Bean和缓存Bean。
+
+FactoryBean是一个Bean，归BeanFactory管理，是Spring提供的一个扩展点，适用于复杂的Bean的创建，FactoryBean能通过实现getObject方法来生产其他Bean实例。BeanFactory调用getBean获取FactoryBean时，name加了&为获取FactoryBean本身，如果没加&就是获取getObject方法返回的对象。
 
 #Spring Bean的生命周期
 
@@ -137,7 +224,7 @@ private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(1
 ```
 
 1. 使用context.getBean(A.class)，旨在获取容器内的单例A(若A不存在，就会走A这个Bean的创建流程)，显然初次获取A是不存在的，因此走**A的创建之路~**
-2. 实例化A（注意此处仅仅是实例化），并将它放进缓存（此时A已经实例化完成，已经可以被引用了）先通过createBeanInstance实例化A对象，又将该实例化的对象通过addSingletonFactory方法放入singletonFactories中，完成A对象早期的暴露
+2. 实例化A（注意此处仅仅是实例化），并将它放进缓存（此时A已经实例化完成，已经可以被引用了）先通过createBeanInstance实例化A对象，又将该实例化的对象通过addSingletonFactory方法放入**singletonFactories**中，完成A对象早期的暴露
 3. 初始化A：@Autowired依赖注入B（此时需要去容器内获取B）
 4. 为了完成依赖注入B，会通过getBean(B)去容器内找B。但此时B在容器内不存在，就走向**B的创建之路~**
 5. 实例化B，并将其放入缓存。（此时B也能够被引用了）
@@ -150,7 +237,7 @@ singletonObjects和二级缓存
 
 earlySingletonObjects中未发现A，但是在三级缓存
 
-singletonFactories中发现A，将A移动到二级缓存
+singletonFactories中**发现A，将A移动到二级缓存**
 
 earlySingletonObjects，同时从三级缓存删除；所以此时缓存里是已经存在A的引用了的，所以getBean(A)能够正常返回
 

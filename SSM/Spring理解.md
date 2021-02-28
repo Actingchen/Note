@@ -674,6 +674,28 @@ value：指定bean的id。如果不指定value属性，默认bean的id是当前�
 name：用于指定bean的id。当不写时，默认值是当前方法的名称。注意：当我们使用注解配置方法时，如果方法有参数，spring框架会去容器中查找有没有可用的bean对象，查找的方式和Autowired注解的作用是一样的。
 ```
 
+#### **Bean的作用范围的注解:**
+
+@Scope:
+
+*** singleton:单例**
+
+*** prototype:多例**
+
+#### Bean的生命周期的配置:
+
+@PostConstruct :相当于init-method
+
+@PreDestroy :相当于destroy-method
+
+  @PostConstruct说明
+
+​     被@PostConstruct修饰的方法会在服务器加载Servlet的时候运行，并且只会被服务器调用一次，类似于Serclet的inti()方法。被@PostConstruct修饰的方法会在构造函数之后，init()方法之前运行。
+
+  @PreConstruct说明
+
+​     被@PreConstruct修饰的方法会在服务器卸载Servlet的时候运行，并且只会被服务器调用一次，类似于Servlet的destroy()方法。被@PreConstruct修饰的方法会在destroy()方法之后运行，在Servlet被彻底卸载之前。
+
 **案例：**
 
 ```
@@ -702,8 +724,8 @@ public DataSource getDataSource() {
 
 **作用：**
 
-```
-@Autowire和@Resource都是Spring支持的注解形式动态装配bean的方式。Autowire默认按照类型(byType)装配，如果想要按照名称(byName)装配，需结合@Qualifier注解使用。
+```java
+@Autowire和@Resource都是Spring支持的注解形式动态装配bean的方式。Autowire默认[按照类型装配](byType)，如果想要[按照名称](byName)装配，需结合@Qualifier注解使用。
 ```
 
 **属性：**
