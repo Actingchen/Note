@@ -466,6 +466,77 @@ private static class IntegerCache {
 
 （4）接口成员变量默认为public static final，必须赋初值，不能被修改；其所有的成员方法都是public、abstract的。抽象类中成员变量默认default，可在子类中被重新定义，也可被重新赋值；抽象方法被abstract修饰，不能被private、static、synchronized和native等修饰，必须以分号结尾，不带花括号。
 
+###成员内部类、局部内部类、匿名内部类、静态内部类
+
+https://www.cnblogs.com/dolphin0520/p/3811445.html
+
+成员内部类：
+
+```java
+public` `class` `Test {
+  ``public` `static` `void` `main(String[] args) {
+    ``//第一种方式：
+    ``Outter outter = ``new` `Outter();
+    ``Outter.Inner inner = outter.``new` `Inner(); ``//必须通过Outter对象来创建
+    
+    ``//第二种方式：
+    ``Outter.Inner inner1 = outter.getInnerInstance();
+  ``}
+}
+```
+
+ 
+
+```java
+class` `Outter {
+  ``private` `Inner inner = ``null``;
+  ``public` `Outter() {
+    
+  ``}
+  
+  ``public` `Inner getInnerInstance() {
+    ``if``(inner == ``null``)
+      ``inner = ``new` `Inner();
+    ``return` `inner;
+  ``}
+   
+  ``class` `Inner {
+    ``public` `Inner() {
+      
+    ``}
+  ``}
+}
+```
+
+局部内部类：
+
+```java
+class People{
+    public People() {
+    
+    }
+}
+```
+
+ 
+
+```java
+class Man{
+  public Man(){
+    
+  }
+  
+  public People getWoman(){
+    class Woman extends People{  //局部内部类
+      int age =0;
+    }
+    return new Woman();
+  }
+}
+```
+
+为什么局部内部类和匿名内部类只能访问局部final变量
+
 ## 8 常见类
 
 ### Object

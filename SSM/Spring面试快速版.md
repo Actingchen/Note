@@ -42,7 +42,7 @@ setter方法注入。setter方法可以被继承，允许设置默认值。缺�
 
 具体过程：
 
-1.首先是在对象实例化之前调用``InstantiationAwareBeanPostProcessor``接口的postProcessBeforeInstantiation方法，如果在这个方法里返回不为空的话能够直接返回，能防止接下来的Bean实例的默认创建。也就是可以直接返回一个代理对象，截断接下来的Bean实例化操作。AOP就是基于这实现的
+1.首先是在对象实例化之前调用``InstantiationAwareBeanPostProcessor``接口的postProcessBeforeInstantiation方法，如果在这个方法里返回不为空的话就返回一个代理对象，截断接下来的Bean实例化操作。AOP就是基于这实现的。
 
 2.进入实例化bean的方法,bean的初始化**doCreateBean**，第一步首先要创建一个对象 **createBeanInstance**。创建对象主要分两种，一种是通过工厂方法创建(优先级高)，另一种就是通过构造器反射创建
 
@@ -94,7 +94,35 @@ FactoryBean是一个Bean，归BeanFactory管理，是Spring提供的一个扩展
 
 FactoryBean接口，实现该接口可以通过getObject方法创建自己想要的bean对象。BeanFactory调用getBean获取FactoryBean时，有beanName处理：name加了&为获取FactoryBean本身，如果没加&就是获取getObject方法返回的对象。
 
+#BeanFactory和ApplicationContext有什么区别？
 
+```undefined
+    BeanFactory和ApplicationContext是Spring的两大核心接口，都可以当做Spring的容器。其中ApplicationContext是BeanFactory的子接口。
+```
+
+（1）BeanFactory：是Spring里面最底层的接口，包含了各种Bean的定义，读取bean配置文档，管理bean的加载、实例化，控制bean的生命周期，维护bean之间的依赖关系。ApplicationContext接口作为BeanFactory的派生，除了提供BeanFactory所具有的功能外，还提供了更完整的框架功能：
+
+①继承MessageSource，因此支持国际化。
+
+②统一的资源文件访问方式。
+
+③提供在监听器中注册bean的事件。
+
+④同时加载多个配置文件。
+
+⑤载入多个（有继承关系）上下文 ，使得每一个上下文都专注于一个特定的层次，比如应用的web层。
+
+（2）①BeanFactroy采用的是延迟加载形式来注入Bean的，即只有在使用到某个Bean时(调用getBean())，才对该Bean进行加载实例化。这样，我们就不能发现一些存在的Spring的配置问题。如果Bean的某一个属性没有注入，BeanFacotry加载后，直至第一次使用调用getBean方法才会抛出异常。
+
+```undefined
+    ②ApplicationContext，它是在容器启动时，一次性创建了所有的Bean。这样，在容器启动时，我们就可以发现Spring中存在的配置错误，这样有利于检查所依赖属性是否注入。 ApplicationContext启动后预载入所有的单实例Bean，通过预载入单实例bean ,确保当你需要的时候，你就不用等待，因为它们已经创建好了。
+
+    ③相对于基本的BeanFactory，ApplicationContext 唯一的不足是占用内存空间。当应用程序配置Bean较多时，程序启动较慢。
+```
+
+（3）BeanFactory通常以编程的方式被创建，ApplicationContext还能以声明的方式创建，如使用ContextLoader。
+
+（4）BeanFactory和ApplicationContext都支持BeanPostProcessor、BeanFactoryPostProcessor的使用，但两者之间的区别是：BeanFactory需要手动注册，而ApplicationContext则是自动注册。
 
 #bean的作用域。
 
@@ -193,7 +221,7 @@ earlySingletonObjects，同时从三级缓存删除；所以此时缓存里是�
 
 1. **B初始化成功**（此时已经注入A成功了，已成功持有A的引用了），return（注意此处return相当于是返回最上面的getBean(B)这句代码，回到了初始化A的流程中~）。
 2. 因为B实例已经成功返回了，因此最终**A也初始化成功**
-3. **到此，B持有的已经是初始化完成的A，A持有的也是初始化完成的B，完美~**
+3. **到此，B持有的已经是初始化完成的A，A持有的也是初始化完成的B，完美~**，最后把初始化好的bean放在 单例池。
 4. 总结：Spring通过将实例化后的对象提前暴露给Spring容器中的singletonFactories，解决了循环依赖的问题
 
 **三级缓存为什么是三级，去除第三级缓存行不行？**
