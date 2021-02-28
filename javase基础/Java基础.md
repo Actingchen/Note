@@ -708,9 +708,13 @@ Java要求一个类的**equals方法和hashCode方法同时覆写**。我们刚�
 
 #####浅拷贝和深拷贝
 
-https://www.jianshu.com/p/94dbef2de298
+数据类型分为基本数据类型（String、Number、Boolean、Null、Undefined、Symbol (es6引入的一种类型) ）和引用数据类型（Object、Array、Function）。
 
-https://www.cnblogs.com/shakinghead/p/7651502.html
+基本数据类型特点：直接存储在栈中；
+
+引用数据类型：它真实的数据是存储在堆内存中，栈中存储的只是指针，指向在堆中的实体地址。
+
+* 深浅拷贝只是针对Array与Object这样的引用数据类型。简单来说，浅拷贝只是拷贝了它在栈中存储的指针，它们指向的都是同一个堆内存地址，所以浅拷贝在某些情况会造成改变数据后导致别的另一份数据也同步被改变的情况；而深拷贝是直接将堆内存中存储的数据直接复制一份，不会有浅拷贝互相影响的问题。
 
 ####toString方法
 

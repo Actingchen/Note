@@ -214,6 +214,8 @@ java 类加载需要经历一下 7 个过程：
 
 初始化时类加载的最后一步，前面的类加载过程，除了在加载阶段用户应用程序可以通过 自定义类加载器参与之外，其余动作完全由虚拟机主导和控制。到了初始化阶段，才真正 开始执行类中定义的 Java 程序代码。
 
+https://www.cnblogs.com/gjmhome/p/11401397.html
+
 #Minor GC、Major GC、Full gc
 
 ##1.Minor GC

@@ -1,4 +1,4 @@
-#ConcurrentHashmap1.8
+#ConcurrentHashmap
 
 https://www.cnblogs.com/lujiango/p/7580558.html
 
@@ -14,30 +14,7 @@ https://www.cnblogs.com/lujiango/p/7580558.html
 >
 > `sizeCtl`小于0，并且不是-1，表示数组正在扩容， -(1+n)，表示此时有n个线程正在共同完成数组的扩容操作,注意之后怎么变为扩容后的新扩容阈值呢？0.75*2n
 
-##put方法：
-步骤：
-1、检查Key或者Value是否为null，
-2、得到Kye的hash值
-3、如果Node数组是空的，此时才初始化 initTable()，
-4、如果找的对应的下标的位置为空，直接new一个Node节点并放入， break；
-5、
-6、如果对应头结点不为空， 进入同步代码块
-判断此头结点的hash值，是否大于零，大于零则说明是链表的头结点在链表中寻找，
-如果有相同hash值并且key相同，就直接覆盖，返回旧值 结束
-如果没有则就直接放置在链表的尾部
-此头节点的Hash值小于零，则说明此节点是红黑二叉树的根节点
-调用树的添加元素方法
-判断当前数组是否要转变为红黑树
-
-## get
-
-首先获取到Key的hash值，
-然后找到对应的数组下标处的元素
-如果次元素是我们要找的，直接返回，
-如果次元素是null 返回null
-如果Key的值< 0 ,说明是红黑树，
-
-##ConcurrentHashMap 1.7和1.8的区别
+#ConcurrentHashMap 1.7和1.8的区别
 
 1️⃣整体结构
 
@@ -66,3 +43,39 @@ https://www.cnblogs.com/lujiango/p/7580558.html
 
 1.7：很经典的思路：计算两次，如果不变则返回计算结果，若不一致，则锁住所有的 Segment 求和。
  1.8：用 baseCount 来存储当前的节点个数，这就设计到 baseCount 并发环境下修改的问题。
+
+#[NaNrailgun：ConcurrentHashmap](https://github.com/NaNrailgun/Note/blob/master/Java%E5%B9%B6%E5%8F%91.md)
+
+- 1.7使用分段数组加链表实现，对整个桶数组分成若干个Segment，每个Segment就是一把锁，每一个Segment存储容器中的一部分数据，多线程访问不同Segment的数据时不会产生锁冲突，降低了锁粒度，提高并发度。对元素进行操作的时候会先定位到对应的Segment获取到锁只后进行操作。
+
+  Segment是一个内部类，继承了ReentrantLock，还维护了一组HashEntry用于存储键值对数据。默认16个Segment。
+
+  size操作先是乐观的，不加锁，然后比较两次获得的结果，如果一致的话就返回，如果不一致那么就会去重试。当重试到一定的阈值的时候就会变成悲观的，加锁然后计算size再返回。（size操作先尝试不加锁，如果连续两次不加锁操作得到的结果是一致的话，那么就可以认为这个结果是正确的，如果尝试次数超过三次的话就需要对每个Segment加锁。）
+
+- 1.8取消了分段锁，采用和HashMap类似的数组链表红黑树的结构，同时使用cas和synchronized保证并发安全。以链表或者红黑树的首节点为锁，所以只要不产生hash冲突的话就不会产生并发。
+
+put流程
+
+1.先判断数01组是否为空，空的话就初始化数组
+
+2.通过key的hash值计算出对应的hash桶，如果桶的头节点为空，那么就cas插入到头节点
+
+3.如果头节点正在扩容，那就调用helpTranfer帮助扩容
+
+4.都不是的话，那么就以头节点为锁，去进行链表或者红黑树的插入，如果链表长度超过8的话会进行树化操作
+
+5.判断是否需要扩容
+
+扩容流程
+
+ConcurrentHashMap是支持并发扩容的，他会将table进行拆分，每一个线程负责一个区间，默认一个处理区间的话是16。然后这个线程会对自己区间里，每一个桶里的链表分别复制两份，一个部分是高位为1的，一部分是高位为0的，高位为0的话那么直接放在新数组的原下标就行了，高位为1的话就需要去放到新下标。在节点复制完成后，会使用ForwardingNode节点去代替原来的hash桶的头节点，表示这个桶已经被处理过了。
+
+如果一个线程helpTranfer发现自己不需要负责任何区间的时候，就直接返回nextTable，外部putVal方法拿到nextTable之后替换掉自己原先的局部变量tab的值，然后又一层循环去做key和value的插入。
+
+get流程
+
+get是不加锁的，他首先会去通过hash值去计算对应的hash桶，如果头节点符合的话就直接返回，如果头节点是ForwardingNode节点，那么就说明这时候正在扩容，那么就调用ForwardingNode的find方法去nextTable查找节点，如果都不符合的话就去查找链表或者红黑树。
+
+为什么不用加锁？
+
+Node节点的value和next使用的是volatile修饰，保证了可见性，当线程修改了Node的时候，其他线程就能感知到。ConcurrentHashMap扩容的时候使用的是复制节点的方式而不是转移节点，当节点复制到新数组完成之后就会将原来的数组的hash桶的头节点设置为ForwardingNode节点，这里的设置使用的是Unsafe类去保证了数组元素的可见性。线程看到是ForwardingNode节点那么就直接调用这个节点的find方法直接去新链表找就行了。

@@ -14,61 +14,9 @@ Spring的IoC容器在实现控制反转和依赖注入的过程中,可以划分�
 
 ![img](https://t10.baidu.com/it/u=217002030,1143584708&fm=173&app=25&f=JPEG?w=503&h=289&s=5E283463318E49494E5DE0DE000080B1)
 
-##spring ioc 创建bean的过程？
-
-https://baijiahao.baidu.com/s?id=1613047743708688271&wfr=spider&for=pc
-
-简书：https://www.jianshu.com/p/1c2dbb1cc900
-
-在BeanFactory容器中，每一个注入对象都对应一个**BeanDefinition**实例对象，该实例对象负责保存注入对象的所有必要信息，包括其对应的对象的class类型、是否是抽象类、构造方法参数以及其他属性等
-
-专门加载解析BeanDefinitionReader，对应到xml配置文件，就是他的子类XmlBeanDefinitionReader，XmlBeanDefinitionReader负责读取Spring指定格式的XML配置文件并解析，之后将解析后的文件内容映射到相应的BeanDefinition。
-
-**AbstractBeanFactory提供了getBean的主流程**
-
-beanName处理
-
-如果要获取FactoryBean对象本身，需要传递 `&BeanName`，但是再获取bean的时候，需要暂时去掉`&`，然后需要递归将alias彻底转换为对应的beanId去创建获取Bean实例
-
-从缓存中获取Bean
-
-单例bean是全局唯一的，spring缓存了所有已经创建的单例bean，所以在获取bean的时候，会首先去缓存中查找，如果找到，直接使用。在创建单例bean的时候如果存在依赖注入，为了避免循环依赖，spring创建bean的时候不等bean的依赖全部set上就会提前将创建bean的ObjectFactory提前添加到缓存中,一旦下个bean创建的时候需要依赖这个bean则直接将ObjectFactory进行set依赖。
-
-**DefaultSingletonBeanRegistry提供了从缓存获取bean的功能**
-
-当当前容器不存在对应beanName的BeanDefinition时，尝试去父类容器获取bean
-
-如果bean配置了 `depend-on`则再实例化该bean之前需要实例化这些依赖
-
-判断BeanDefinition中配置是单例模式，则进行单例实体创建流程。调用getSingleton方法，传递一个ObjectFactory对象
-
-调用DefaultSingletonBeanRegistry的getSingletion方法
-
-调用AbstractAutowireCapableBeanFactory中的**createBean方法**
-
-在进行实例化前，可以通过【BeanPostProcessor】在创建之前改变bean，如果经过这个处理器返回的结果不为空，会直接忽略后续的Bean的创建而直接返回。AOP就是基于这实现的
-
-如果后置处理器没有返回一个实例对象，这时 进入实例化bean的方法,bean的初始化**doCreateBean**，第一步首先要创建一个对象 **createBeanInstance**，。创建对象主要分两种，一种是通过工厂方法创建(优先级高)，另一种就是通过构造器反射创建
-
-将反射创建的对象添加到缓存中，注意这个时候该bean还未进行依赖注入，这样在循环依赖中，其他bean就可以将未依赖注入的这个bean注入。而之后在将该bean的依赖注入后，bean的地址不会变。只是某些属性变化，不会影响。所以只有setter注入的单例模式bean才能解决循环依赖问题。
-
-AOP就是在这里将advice动态注入bean中的，使用SmartInstantiationAwareBeanPostProcessor
-
-**populateBean**，依赖注入,属性注入前，应用后置处理器,如果后置处理器有了设置 那么不再继续属性注入，直接停止返回，否则自动装配，@Autowire就是在这里实现的
-
-注册销毁方法：对于非web项目要想使在bean容器关闭的时候执行bean的销毁方式需要注册一个关闭钩子context.registerShutdownHook()。
-
-FactoryBean接口，实现该接口可以通过getObject方法创建自己想要的bean对象。在初始化bean的时候，如果bean实现类了FactoryBean接口，则是返回getObject方法返回的对象，而不是创建实现FactoryBean接口的对象，
-
-获取FactoryBean的getObject方法中定义的实体对象，如果定义的 isSingleton() 返回的是true，则会将获取到的bean添加到一个缓存factoryBeanObjectCache中，保证单例。
-
-spring容器原则上保证容器中所有的bean都应用【BeanPostProcessor】的postProcessAfterInitialization处理器
-
-调用 FactoryBean的getObject方法获取对象。如果没有实现这个接口，那就**Initialization**方法
 
 
-
-##new 一个对象的过程？
+##传统：new 一个对象的过程？
 
 > 1. 当虚拟机遇到一条new指令时候，首先去检查这个指令的参数是否能 **在常量池中能否定位到一个类的符号引用** （即类的带路径全名），并且检查这个符号引用代表的类是否已被加载、解析和初始化过，即**验证是否是第一次使用该类**。如果没有（不是第一次使用），那必须先执行相应的类加载过程（class.forname()）。
 > 2. 在类加载检查通过后，接下来虚拟机将 **为新生的对象分配内存** 。对象所需的内存的大小在类加载完成后便可以完全确定，为对象分配空间的任务等同于把一块确定大小的内存从Java堆中划分出来，目前常用的有两种方式，根据使用的垃圾收集器的不同使用不同的分配机制：2.1. **指针碰撞**（Bump the Pointer）：假设Java堆的内存是绝对规整的，所有用过的内存都放一边，空闲的内存放在另一边，中间放着一个指针作为分界点的指示器，那所分配内存就仅仅把那个指针向空闲空间那边挪动一段与对象大小相等的距离。2.2. **空闲列表**（Free List）：如果Java堆中的内存并不是规整的，已使用的内存和空间的内存是相互交错的，虚拟机必须维护一个空闲列表，记录上哪些内存块是可用的，在分配时候从列表中找到一块足够大的空间划分给对象使用。
@@ -83,7 +31,40 @@ spring容器原则上保证容器中所有的bean都应用【BeanPostProcessor�
 
 setter方法注入。setter方法可以被继承，允许设置默认值。缺点当然就是对象无法在构造完成后马上进入就绪状态。
 
+##Spring Bean的生命周期
 
+大致分为
+
+1. 实例化 Instantiation
+2. 属性赋值 Populate
+3. 初始化 Initialization
+4. 销毁 Destruction
+
+具体过程：
+
+1.首先是在对象实例化之前调用``InstantiationAwareBeanPostProcessor``接口的postProcessBeforeInstantiation方法，如果在这个方法里返回不为空的话能够直接返回，能防止接下来的Bean实例的默认创建。也就是可以直接返回一个代理对象，截断接下来的Bean实例化操作。AOP就是基于这实现的
+
+2.进入实例化bean的方法,bean的初始化**doCreateBean**，第一步首先要创建一个对象 **createBeanInstance**。创建对象主要分两种，一种是通过工厂方法创建(优先级高)，另一种就是通过构造器反射创建
+
+3.在Bean实例化完成后走**populateBean**进行Bean的属性填充，在进行属性注入之前会调用【``InstantiationAwareBeanPostProcessor``】接口的postProcessAfterInstantiation方法，如果这个方法返回false，那么可以跳过Spring默认的属性注入，但是这也意味着我们要自己去实现属性注入的逻辑，所以一般情况下，不会这么去拓展。
+
+4.之后会去调用``InstantiationAwareBeanPostProcessor``接口的postProcessProperties方法和postProcessPropertyValues方法，postProcessPropertyValues方法现在已经弃用。应用是在@Autowried注解的注入，使用到的是``AutowAutoiredAnnotationBeanPostProcessor``后置处理器，这个处理器实现了``InstantiationAwareBeanPostProcessor``接口。在Spring5之前用的value方法注入，5之后设置value方法弃用，使用properties方法注入。
+
+5.设置Bean的属性值。
+
+6.在注入属性完之后会走到**initializeBean方法**进行方法的回调。
+
+7.如果Bean实现了aware接口，比如``BeanNameAware``、``BeanClassLoaderAware`` 或 ``BeanFactoryAware`` 接口的话就会执行相对应方法的回调。
+
+8.回调``BeanPostProcessor`` 的 postProcessBeforeInitialization方法。
+
+9.如果有设置init方法，回调。
+
+10.如果实现了``InitializingBean ``接口的话，调用它的afterPropertiesSet方法。
+
+11.回调``BeanPostProcessor ``的 postProcessAfterInitialization方法。
+
+然后，Spring Bean 的销毁过程会依次调用（如果Bean实现了DisposableBean这个接口 ）DisposableBean 的 destroy 方法和 Bean 自身定制的 destroy 方法。
 
 # AOP
 
@@ -99,7 +80,7 @@ AOP实现的关键在于 代理模式，AOP代理主要分为静态代理和动�
 
 ##jdk动态代理和cglib动态代理
 
->①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，需要先实现一个``InvocationHandler``去定义我们方法的增强策略，然后拿这个handler去Proxy newProxyInstance去动态生成字节码，生成代理类，最后创建一个代理对象出来，这个代理对象会对方法进行增强之后反射调用真实对象的方法。动态生成的代理类继承了Proxy类，由于Java的单继承，所以如果没有提供接口的话就无法使用jdk动态代理。
+>①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，需要先实现一个``InvocationHandler``去定义我们方法的增强策略，然后拿这个handler去Proxy newProxyInstance去动态生成代理类，最后创建一个代理对象出来，这个代理对象会对方法进行增强之后反射调用真实对象的方法。动态生成的代理类继承了Proxy类，由于Java的单继承，所以如果没有提供接口的话就无法使用jdk动态代理。
 >
 >* 注意：生成的代理类的成员变量是Method，调用方法的时候会拿着这个Method去到``InvocationHandler``调用invoke方法，这个handler就是我们定义的handler。
 
@@ -109,42 +90,11 @@ AOP实现的关键在于 代理模式，AOP代理主要分为静态代理和动�
 
 BeanFactory是一个容器是一个顶层接口，为Spring管理Bean提供了一套通用规范，BeanFactory用来存储Bean的注册信息，用来实例化Bean和缓存Bean。
 
-FactoryBean是一个Bean，归BeanFactory管理，是Spring提供的一个扩展点，适用于复杂的Bean的创建，FactoryBean能通过实现getObject方法来生产其他Bean实例。BeanFactory调用getBean获取FactoryBean时，name加了&为获取FactoryBean本身，如果没加&就是获取getObject方法返回的对象。
+FactoryBean是一个Bean，归BeanFactory管理，是Spring提供的一个扩展点，适用于复杂的Bean的创建，FactoryBean能通过实现getObject方法来生产其他Bean实例。
 
-#Spring Bean的生命周期
+FactoryBean接口，实现该接口可以通过getObject方法创建自己想要的bean对象。BeanFactory调用getBean获取FactoryBean时，有beanName处理：name加了&为获取FactoryBean本身，如果没加&就是获取getObject方法返回的对象。
 
-首先说一下Servlet的生命周期：实例化，初始init，接收请求service，销毁destroy；
 
-Spring上下文中的Bean生命周期也类似，
-
-1. 实例化 Instantiation
-2. 属性赋值 Populate
-3. 初始化 Initialization
-4. 销毁 Destruction
-
-具体过程：
-
-（1）实例化Bean：
-
-对于BeanFactory容器，当客户向容器请求一个尚未初始化的bean时，或初始化bean的时候需要注入另一个尚未初始化的依赖时，容器就会调用createBean进行实例化。对于ApplicationContext容器，当容器启动结束后，通过获取BeanDefinition对象中的信息，实例化所有的bean。
-
-（2）设置Bean属性 Spring根据BeanDefinition中的信息 以及 通过BeanWrapper提供的设置属性的接口完成依赖注入。
-
-（3）处理Aware接口：
-
-如果我们通过各种Aware接口声明了依赖关系，则会出注入Bean对容器基础设施层面的依赖。具体包括BeanNameAware、BeanFactoryAware和ApplicationContextAware,分别会注入Bean ID、Bean Factory或者ApplicationContext
-
-（4）调用BeanPostProcessor的前置初始化方法postProcessBeforeInitialization
-
-（5）如果实现了InitializingBean接口、则会调用afterPropertiesSet方法
-
-（6）调用Bean自身定义的init方法
-
-（7）调用BeanPostProcessor的后置初始化方法postProcessAfterInitialization
-
-创建过程完毕
-
-然后，Spring Bean 的销毁过程会依次调用（如果Bean实现了DisposableBean这个接口 ）DisposableBean 的 destroy 方法和 Bean 自身定制的 destroy 方法。
 
 #bean的作用域。
 
@@ -182,11 +132,11 @@ spring事务的传播行为说的是，当多个事务同时存在的时候，sp
 
 ① **PROPAGATION_REQUIRED**：如果当前存在事务，就加入该事务，如果当前没有事务，就创建一个新事务。该设置是最常用的设置。	
 
-② PROPAGATION_SUPPORTS：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就以非事务执行。‘
+② PROPAGATION_SUPPORTS：支持当前事务(外部事务），如果当前存在事务，就加入该事务，如果当前不存在事务，就以非事务执行。‘
 
 ③ PROPAGATION_MANDATORY：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就抛出异常。
 
-④ **PROPAGATION_REQUIRES_NEW**：创建新事务，无论当前存不存在事务，都创建新事务。
+④ **PROPAGATION_REQUIRES_NEW**：无论当前存不存在事务，都创建新事务。
 
 ⑤ PROPAGATION_NOT_SUPPORTED：以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
 
