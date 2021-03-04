@@ -54,9 +54,9 @@ https://www.cnblogs.com/lujiango/p/7580558.html
 
 - 1.8取消了分段锁，采用和HashMap类似的数组链表红黑树的结构，同时使用cas和synchronized保证并发安全。以链表或者红黑树的首节点为锁，所以只要不产生hash冲突的话就不会产生并发。
 
-put流程
+**put流程**
 
-1.先判断数01组是否为空，空的话就初始化数组
+1.先判断数组是否为空，空的话就初始化数组
 
 2.通过key的hash值计算出对应的hash桶，如果桶的头节点为空，那么就cas插入到头节点
 
@@ -66,16 +66,16 @@ put流程
 
 5.判断是否需要扩容
 
-扩容流程
+**扩容流程**
 
 ConcurrentHashMap是支持并发扩容的，他会将table进行拆分，每一个线程负责一个区间，默认一个处理区间的话是16。然后这个线程会对自己区间里，每一个桶里的链表分别复制两份，一个部分是高位为1的，一部分是高位为0的，高位为0的话那么直接放在新数组的原下标就行了，高位为1的话就需要去放到新下标。在节点复制完成后，会使用ForwardingNode节点去代替原来的hash桶的头节点，表示这个桶已经被处理过了。
 
 如果一个线程helpTranfer发现自己不需要负责任何区间的时候，就直接返回nextTable，外部putVal方法拿到nextTable之后替换掉自己原先的局部变量tab的值，然后又一层循环去做key和value的插入。
 
-get流程
+**get流程**
 
 get是不加锁的，他首先会去通过hash值去计算对应的hash桶，如果头节点符合的话就直接返回，如果头节点是ForwardingNode节点，那么就说明这时候正在扩容，那么就调用ForwardingNode的find方法去nextTable查找节点，如果都不符合的话就去查找链表或者红黑树。
 
-为什么不用加锁？
+**为什么不用加锁？**
 
-Node节点的value和next使用的是volatile修饰，保证了可见性，当线程修改了Node的时候，其他线程就能感知到。ConcurrentHashMap扩容的时候使用的是复制节点的方式而不是转移节点，当节点复制到新数组完成之后就会将原来的数组的hash桶的头节点设置为ForwardingNode节点，这里的设置使用的是Unsafe类去保证了数组元素的可见性。线程看到是ForwardingNode节点那么就直接调用这个节点的find方法直接去新链表找就行了。
+Node节点的value和next使用的是volatile修饰，保证了可见性，当线程修改了Node的时候，其他线程就能感知到。ConcurrentHashMap扩容的时候使用的是复制节点的方式而不是转移节点，当节点复制到新数组完成之后就会将原来的数组的hash桶的头节点设置为ForwardingNode节点，这里的设置使用的是Unsafe类去保证了数组元素的可见性。**线程看到是ForwardingNode节点那么就直接调用这个节点的find方法直接去新链表找就行了**。
