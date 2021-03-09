@@ -545,3 +545,5 @@ mysql> explain select distinct name from film;
 Redis的集群模式使用的就是虚拟槽分区，一共有16383个槽位平均分布到节点上
 
 ![clipboard.png](https://segmentfault.com/img/bVblSr2?w=507&h=567)
+
+[造成MySQL全表扫描的原因](https://www.cnblogs.com/youcong/p/9858616.html)
