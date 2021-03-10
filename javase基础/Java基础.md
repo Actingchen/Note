@@ -1,6 +1,6 @@
 # Java基础
 
-## 1 JDK-JRE-JVM的关系
+### JDK-JRE-JVM的关系
 
 java程序从代码到运行一般有下面三步：
 
@@ -27,15 +27,13 @@ jdk(开发工具包)>jre(运行时环境，运行已编译程序)>jvm(java虚拟
 
 ![image-20210203161505294](C:\Users\11468\AppData\Roaming\Typora\typora-user-images\image-20210203161505294.png)
 
-## 2 java和c++的区别
+###java和c++的区别
 
 
 
 ![](..\images\cjj.png)
 
 
-
-## 3 java语法
 
 ### 字符型常量和字符串常量的区别？
 
@@ -45,79 +43,15 @@ jdk(开发工具包)>jre(运行时环境，运行已编译程序)>jvm(java虚拟
 
 3）内存大小：字符常量占**2个字节**；字符串常量占若干个字节
 
-### 泛型了解吗？什么是类型擦除？介绍一下常用的通配符
+### 泛型？类型擦除？通配符？
 
-Java的编译器将java源文件编译成字节码.class文件，虚拟机加载并运行。对于泛型类，java编译器会将其转换为普通的非泛型代码。将类型T擦除，然后替换为Object，插入必要的强制类型转换。Java虚拟机实际执行的时候，并不知道泛型这回事，只知道普通的类及代码。
+> 泛型防止了每次使用前进行统一的类型转换。它提供了编译期的类型安全，确保你只能把正确类型的对象放入 集合中，才能避免在运行时出现ClassCastException。
 
-j**ava设计时不知道我们用集合保存什么类型的对象，所以编译时是不分类型的**
+> 泛型是通过类型擦除来实现的，编译器在编译时擦除了所有类型相关的信息，所以在运行时不存在任何类型相关的信息。例如 List<String>在运行时仅用一个List来表示。这样做的目的，是确保能和Java 5之前的版本开发二进制类库进行兼容。你无法在运行时访问到类型参数，因为编译器已经把泛型类型转换成了原始类型。
 
-**java是先编译后运行的，所以泛型的出现是为了编译时进行类型检查**
+> 有两种限定通配符，一种是<? extends T>它通过确保类型【必须是T的子类】，T为上界，另一种是<? super T>它通过确保类型【必须是T的父类】，T为下界。泛型类型必须用限定内的类型来进行初始化，否则会导致编译错误。另一方面<?>表 示了非限定通配符，因为<?>可以用【任意类型】来替代。
 
-**如在代码中定义`List<Object>`和`List<String>`等类型，在编译后都会变成`List`，JVM看到的只是List，**也就是说泛型附加的类型信息对JVM是看不到的。Java编译器会在编译时尽可能的发现可能出错的地方，但是仍然无法在运行时刻出现的类型转换异常的情况
-
-**通过两个例子证明Java类型的类型擦除**
-
-例1.原始类型相等
-
-
-
-```java
-public class Test {
-
-    public static void main(String[] args) {
-
-        ArrayList<String> list1 = new ArrayList<String>();
-        list1.add("abc");
-
-        ArrayList<Integer> list2 = new ArrayList<Integer>();
-        list2.add(123);
-
-        System.out.println(list1.getClass() == list2.getClass());
-    }
-
-}
-```
-
-
-
-在这个例子中，我们定义了两个`ArrayList`数组，不过一个是`ArrayList<String>`泛型类型的，只能存储字符串；一个是`ArrayList<Integer>`泛型类型的，只能存储整数，最后，我们通过`list1`对象和`list2`对象的`getClass()`方法获取他们的类的信息，最后发现结果为`true`。说明泛型类型`String`和`Integer`都被擦除掉了，只剩下原始类型。
-
-例2.通过反射添加其它类型元素
-
-```java
-public class Test {
-
-    public static void main(String[] args) throws Exception {
-
-        ArrayList<Integer> list = new ArrayList<Integer>();
-
-        list.add(1);  //这样调用 add 方法只能存储整形，因为泛型类型的实例为 Integer
-
-        list.getClass().getMethod("add", Object.class).invoke(list, "asd");
-
-        for (int i = 0; i < list.size(); i++) {
-            System.out.println(list.get(i));
-        }
-    }
-
-}
-```
-
-
-
-在程序中定义了一个`ArrayList`泛型类型实例化为`Integer`对象，如果直接调用`add()`方法，那么只能存储整数数据，不过当我们利用反射调用`add()`方法的时候，却可以存储字符串，这说明了`Integer`泛型实例在编译之后被擦除掉了，只保留了原始类型。
-
-**常用的通配符**
-
-? 表示不确定的java类型
-
-T（Type）表示具体的一个java类型
-
-K V（key value）分别代表java的键值中的key value
-
-E（element）代表Element
-
-### 泛型的使用方式
+泛型的使用方式
 
 ```java
 //1.泛型类
@@ -182,8 +116,6 @@ printArray(intArray);
 printArray(stringArray);
 ```
 
-
-
 ### Java 关于强引用，软引用，弱引用和虚引用的区别与用法
 
 
@@ -209,7 +141,7 @@ printArray(stringArray);
 
 ==：它的作用是判断两个对象的地址是不是相等。即判断两个对象是不是同一个对象。
 
-当是基本数据类型==比较的是值，引用数据类型时比较的时内存地址。
+==如果是基本数据类型，比较的是值；如果是引用数据类型时，比较的是内存地址。
 
 equals：它的作用也是判断两个对象是否相等，它不能用于比较基本数据类型的变量
 
@@ -217,9 +149,9 @@ Object的equals方法：默认的实现就是比较对象的内存地址
 
 String的equals方法：比较的时对象的值。当创建String类型的对象时，虚拟机会在常量池查找有没有已经存在的值和要创建的值相同的对象，如果有就把它赋给当前引用。如果没有就在常量池中重新创建一个String对象。直接使用String a=“a”，是指向常量池的地址中。String b=new String("b")是指向堆的地址，String c=a+a，我们知道他里面是final修饰的，这时它里面会有new Stringbuilder的方式new一个新对象，final String a1="a",String d=a1+a1,这个时候它不是变量了，它是常量。编译的时候常量相加的会转变成常量。
 
-###hashCode()与equals()
+###hashCode
 
-hashCode的作用是获取哈希码。它返回的是一个int整数。这个哈希码的作用是确定对象再哈希表的索引位置。hashCode()是定义在Object类中的，也就是任意类中都有，另外，native关键字修饰的本地方法，也就是本质上里面调用的是c或c++实现的。hashCode（）默认是在对堆的对象产生独特值。
+hashCode的作用是获取哈希码。它返回的是一个int整数。这个哈希码的作用是确定对象在哈希表的索引位置。hashCode()是定义在Object类中的，也就是任意类中都有，另外，native关键字修饰的本地方法，也就是本质上里面调用的是c或c++实现的。hashCode（）默认是在对堆的对象产生独特值。
 
 ###Java中sleep()和wait()的区别
 
@@ -239,7 +171,39 @@ hashCode的作用是获取哈希码。它返回的是一个int整数。这个哈
 
 2、如果两个对象的hashCode相同，它们并不一定相同(即用equals比较返回false)  
 
-所以如果重写了equals的时候为了保证这种关系，需要重写hashcode方法
+所以如果重写了equals的时候需要保证这种关系，那么就需要重写hashcode方法，否则会出现equals认为两个对象相等，而hashcode方法发现桶位置不同认为不同，形成一个自相矛盾。
+
+###String的hashcode方法原理
+
+在String类中有个私有实例字段hash表示该串的哈希值，在第一次调用hashCode方法时，字符串的哈希值被计算并且赋值给hash字段，之后再调用hashCode方法便可以直接取hash字段返回。
+
+String类中的hashCode计算方法还是比较简单的，就是以31为权，每一位为字符的ASCII值进行运算，用自然溢出来等效取模。
+
+哈希计算公式可以计为s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]
+
+取31主要是因为31是一个奇质数，所以31*i=32*i-i=(i<<5)-i，这种位移与减法结合的计算相比一般的运算快很多。
+
+字符串哈希可以做很多事情，通常是类似于字符串判等，判回文之类的。
+
+但是仅仅依赖于哈希值来判断其实是不严谨的，除非能够保证不会有哈希冲突，通常这一点很难做到。因为存在反例。
+
+### String、StringBuffer和StringBuilder的区别
+
+1、String、StringBuffer和StringBuilder
+
+* String 类不可变，内部维护的char[] 数组长度不可变，为final修饰，String类也是final修饰，不存在扩容。字符串拼接，截取，都会生成一个新的对象。频繁操作字符串效率低下，因为每次都会生成新的对象。
+* StringBuilder 类内部维护可变长度char[] ， 初始化数组容量为16，存在扩容， 其append拼接字符串方法内部调用System的native方法，进行数组的拷贝，不会重新生成新的StringBuilder对象。非线程安全的字符串操作类， 其每次调用 toString方法而重新生成的String对象，不会共享StringBuilder对象内部的char[]，会进行一次char[]的copy操作。
+* StringBuffer 类内部维护可变长度char[]， 基本上与StringBuilder一致，但其为线程安全的字符串操作类，大部分方法都采用了Synchronized关键字修改，以此来实现在多线程下的操作字符串的安全性。其toString方法而重新生成的String对象，会共享StringBuffer对象中的toStringCache属性（char[]），但是每次的StringBuffer对象修改，都会置null该属性值。
+
+2、三者之间的区别：
+
+都是final类，都不允许被继承；
+
+String类长度是不可变的，StringBuffer和StringBuilder类长度是可以改变的；
+
+StringBuffer类是线程安全的，StringBuilder不是线程安全的；
+
+> StirngBuilder 相比使用 StringBuffer 仅能获得 10%~15% 左右的性能提升，但却要冒多线程不安全的风险。确定你的模块**不会运行在多线程**模式下，才可以采用StringBuilder；否则还是用StringBuffer
 
 ###谈谈类加载机制
 
@@ -275,9 +239,7 @@ CustomClassLoader 用户自定义类加载器，对于用户自定义的加载�
 
 一些敏感信息（如密码，银行卡号等），为了安全起见，可以加上transient关键字。**这个字段的生命周期仅存于调用者的内存中而不会写到磁盘里持久化。**
 
-##  4 基本数据类型
-
-### 几种基本数据类型？对应的封装类？各占多少字节？
+### 8大基本数据类型？对应的封装类？各占多少字节？
 
 java中有8种基本数据类型，分别为
 
@@ -366,8 +328,6 @@ private static class IntegerCache {
 * Integer引用类型和Integer引用类型比较是否相同，看边界
   * 在-128到127范围内时从IntegerCache缓存里拿出来，所以当数值相同时，引用也相同，超过这个范围Integer是new的形式开辟新内存。
 
-## 5 修饰符
-
 ### final 
 
 * final修饰的类，不能被继承，final类中的所有成员方法都会被隐式指定为final方法
@@ -394,8 +354,6 @@ private static class IntegerCache {
 * 注意：
   * this、super不能用在static方法中。因为**this和super是属于对象范畴的东西，而静态方法是属于类范畴的东西**
 
-## 6 方法
-
 ### 重载和重写
 
 * **重载**：发生在一个类里面，方法名相同，但是参数列表中的参数个数、类型、顺序的导致参数列表不同，调用这些相同名方法的时候就会发生重载。本质上就是根据输入的参数列表不同，做不同的处理。特别注意的是：
@@ -407,8 +365,6 @@ private static class IntegerCache {
   
 
 * **重写**：发生在父类子类之间，方法名相同，参数列表相同。当子类调用使用这种方法的时候会覆盖父类的方法。
-
-## 7 类和对象
 
 ### 面向对象和面向过程
 
@@ -536,8 +492,6 @@ class Man{
 ```
 
 为什么局部内部类和匿名内部类只能访问局部final变量
-
-## 8 常见类
 
 ### Object
 
@@ -785,7 +739,7 @@ Java要求一个类的**equals方法和hashCode方法同时覆写**。我们刚�
 
 引用数据类型：它真实的数据是存储在堆内存中，栈中存储的只是指针，指向在堆中的实体地址。
 
-* 深浅拷贝只是针对Array与Object这样的引用数据类型。简单来说，浅拷贝只是拷贝了它在栈中存储的指针，它们指向的都是同一个堆内存地址，所以浅拷贝在某些情况会造成改变数据后导致别的另一份数据也同步被改变的情况；而深拷贝是直接将堆内存中存储的数据直接复制一份，不会有浅拷贝互相影响的问题。
+* 简单来说，浅拷贝只是拷贝了它在栈中存储的指针，它们**指向的都是同一个堆内存地址**，所以浅拷贝在某些情况会造成改变数据后导致别的另一份数据也同步被改变的情况；而深拷贝是**直接将堆内存中存储的数据直接复制一份**，不会有浅拷贝互相影响的问题。
 
 ####toString方法
 
@@ -966,8 +920,6 @@ StringBuffer vs StringBuilder
 
 比如，ArrayList 实现**java.io.Serializable 接口**，这意味着ArrayList**支持序列化**，**能通过序列化去传输**。
 
-那什么是序列化和反序列化
-
 **把对象转换为字节序列的过程称为对象的序列化。**
 
 **把字节序列恢复为对象的过程称为对象的反序列化**。
@@ -975,9 +927,9 @@ StringBuffer vs StringBuilder
 　　1） 把对象的字节序列永久地保存到硬盘上，通常存放在一个文件中；
 　　2） 在网络上传送对象的字节序列。
 
-　　在很多应用中，需要对某些对象进行序列化，让它们离开内存空间，入住物理硬盘，以便长期保存。比如最常见的是Web服务器中的Session对象，当有 10万用户并发访问，就有可能出现10万个Session对象，内存可能吃不消，于是Web容器就会把一些seesion先序列化到硬盘中，等要用了，再把保存在硬盘中的对象还原到内存中。
-
 　　当两个进程在进行远程通信时，彼此可以发送各种类型的数据。无论是何种类型的数据，都会以二进制序列的形式在网络上传送。发送方需要把这个Java对象转换为字节序列，才能在网络上传送；接收方则需要把字节序列再恢复为Java对象。
+
+也可以引入jackson类库做JSON序列化和反序列化操作
 
 ##java中同步和异步有什么异同？
 
