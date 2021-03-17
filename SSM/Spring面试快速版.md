@@ -2,7 +2,7 @@
 
 **--工厂模式和反射机制--**
 
-类主动创建依赖对象，从而导致类与类之间高耦合,局部变更会影响到全部，ioc相当于在他们耦合关系之间加了一层，现在IOC利用反射机制把创建对象的控制权交给Spring IOC容器来创建（时机）、管理（对象的生命周期）、装配（通过依赖注入，配置对象）。IOC让对象的创建不用去new了，可以由spring自动生产，在运行时动态的去创建对象以及管理对象，并调用对象的方法。
+传统上，类主动创建依赖对象，从而导致类与类之间高耦合,局部变更会影响到全部，ioc相当于在他们耦合关系之间加了一层，现在IOC利用反射机制把创建对象的控制权交给Spring IOC容器来创建（时机）、管理（对象的生命周期）、装配（通过依赖注入，配置对象）。IOC让对象的创建不用去new了，可以由spring自动生产，在运行时动态的去创建对象以及管理对象，并调用对象的方法。
 
 > IoC 是设计思想，DI 是具体的实现方式；
 
@@ -61,13 +61,9 @@ setter方法注入。setter方法可以被继承，允许设置默认值。缺�
 
   都会将需要交给Spring管理的Bean信息注册，factory-method在读取xml阶段就能直接注册进beandefinitionMap里面，而@Bean是通过一个BeanFactoryPostProcessor，beanfactory后置处理器去解析@Bean标注的方法然后注册进Map里面，然后在实例化对象的时候使用指定的factory-method实例化Bean，然后将这个Bean放入单例池中保存。
 
-![image-20201109201102615](C:/Users/11468/Downloads/Note-master/Spring整理.assets/image-20201109201102615.png)
-
 ##Spring Bean的生命周期
 
-首先说一下Servlet的生命周期：实例化，初始init，接收请求service，销毁destroy；
-
-Spring上下文中的Bean生命周期也类似，
+Spring上下文中的Bean生命周期，
 
 1. 实例化 Instantiation
 2. 属性赋值 Populate
@@ -76,7 +72,7 @@ Spring上下文中的Bean生命周期也类似，
 
 具体过程：
 
-首先是在对象实例化之前调用``InstantiationAwareBeanPostProcessor``接口的postProcessBeforeInstantiation方法，如果在这个方法里返回不为空的话能够直接return，会断掉接下来的Bean实例的默认创建。也就是在这里直接返回一个代理对象。AOP就是基于这实现的。
+首先是在对象实例化之前调用``InstantiationAwareBeanPostProcessor``接口的postProcessBeforeInstantiation方法，如果在这个方法里返回不为空的话能够直接return，会断掉接下来的Bean实例的默认创建。也就是在这里直接返回一个代理对象。
 
 （1）实例化Bean：
 
@@ -88,7 +84,7 @@ Spring上下文中的Bean生命周期也类似，
 
 如果我们通过各种Aware接口声明了依赖关系，则会出注入Bean对容器基础设施层面的依赖。比如BeanNameAware、BeanFactoryAware和ApplicationContextAware,分别会注入Bean ID、Bean Factory或者ApplicationContext。
 
-（4）调用BeanPostProcessor的前置初始化方法postProcessBeforeInitialization （BeanPostProcessor针对所有Spring上下文中所有的bean）
+（4）调用BeanPostProcessor的前置初始化方法postProcessBeforeInitialization （BeanPostProcessor针对Spring上下文中所有的bean）
 
 （5）如果实现了InitializingBean接口、则会调用afterPropertiesSet方法（初始化bean的时候执行，可以针对某个具体的bean进行配置）
 
@@ -98,7 +94,7 @@ Spring上下文中的Bean生命周期也类似，
 
 创建过程完毕
 
-然后，销毁Bean，先调用@PreDestroy标识的方法，如果有实现``DiposiableBean``接口的话，调用里面的destroy方法。
+然后，销毁Bean，调用destroy方法，如果有实现``DiposiableBean``接口的话，调用里面的destroy方法。
 
 # AOP
 
@@ -114,7 +110,7 @@ AOP实现的关键在于 代理模式，AOP代理主要分为静态代理和动�
 
 ##jdk动态代理和cglib动态代理
 
->①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，需要先实现一个``InvocationHandler``去定义我们方法的增强策略，然后拿这个handler去Proxy newProxyInstance去动态生成代理类，最后创建一个代理对象出来，这个代理对象会对方法进行增强之后invoke方法反射调用真实对象的方法。动态生成的代理类                                           继承了Proxy类，由于Java的单继承，所以如果没有提供接口的话就无法使用jdk动态代理。
+>①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，需要先实现一个``InvocationHandler``去定义我们方法的增强策略，然后拿这个handler去Proxy newProxyInstance去动态生成代理类，最后创建一个代理对象出来，这个代理对象会对方法进行增强之后回调invoke方法反射调用真实对象的方法。动态生成的代理类。                                          如果没有提供接口的话就无法使用jdk动态代理。
 >
 >* 注意：生成的代理类的成员变量是Method，调用方法的时候会拿着这个Method去到``InvocationHandler``调用invoke方法，这个handler就是我们定义的handler。
 
@@ -158,7 +154,23 @@ spring支持编程式事务管理和声明式事务管理两种方式：
 
 声明式事务最大的优点就是不需要在业务逻辑代码中掺杂事务管理的代码，只需在**配置文件**中做相关的事务规则声明或通过**@Transactional注解**的方式，便可以将事务规则应用到业务逻辑中。
 
-声明式事务管理要优于编程式事务管理，这正是spring倡导的**非侵入式**的开发方式，使业务代码不受污染，只要加上注解就可以获得完全的事务支持。**唯一不足地方是，最细粒度只能作用到方法级别，无法做到像编程式事务那样可以作用到代码块级别。**
+声明式事务管理要优于编程式事务管理，这正是spring倡导的**非侵入式**的开发方式，使业务代码不受污染，只要加上注解就可以获得完全的事务支持。**缺点是，最细粒度只能作用到方法级别，无法做到像编程式事务那样可以作用到代码块级别。**
+
+##### 事务回滚
+
+默认情况下，事务只有在遇到RuntimeException和Error时才会回滚。但遇到Checked异常不会回滚。
+
+##### @Transaction失效场景
+
+1.数据库不支持事务
+
+2.方法不是public
+
+3.自身调用
+
+4.异常被catch住
+
+5.回滚的异常类型设置错误
 
 ##（2）spring的事务传播行为：
 
@@ -207,7 +219,7 @@ private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(1
 //在创建过程中，都是从三级缓存(对象工程创建不完整对象)，将提前暴露的对象放入到二级缓存，从二级缓存拿到后，完成初始化，放入一级缓存
 ```
 
-1. 使用context.getBean(A.class)，旨在获取容器内的单例A(若A不存在，就会走A这个Bean的创建流程)，显然初次获取A是不存在的，因此走**A的创建之路~**
+1. 使用context.getBean(A.class)，旨在获取容器内的单例A(若A不存在，就会走A这个Bean的创建流程)
 2. 实例化A（注意此处仅仅是实例化），并将它放进缓存（此时A已经实例化完成，已经可以被引用了）先通过createBeanInstance实例化A对象，又将该实例化的对象通过addSingletonFactory方法放入**singletonFactories**中，完成A对象早期的暴露
 3. 初始化A：@Autowired依赖注入B（此时需要去容器内获取B）
 4. 为了完成依赖注入B，会通过getBean(B)去容器内找B。但此时B在容器内不存在，就走向**B的创建之路~**
@@ -258,10 +270,10 @@ Autowried和Resource注解实现注入的时候，本质上都是依靠``MergedB
 
 区别：1.后置处理器不一样
 
-2.Autowried是byType注入，Resource默认是byName注入但也提供byName注入
+2.属性：
 
-3.属性：
+@Autowired按类型装配byType依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它required属性为false。如果我们想使用按名称装配，可以结合@Qualifier注解一起使用。
 
-@Autowired按类型装配依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它required属性为false。如果我们想使用按名称装配，可以结合@Qualifier注解一起使用。
+@Resource优先按ByName然后再按类型，有两个中重要的属性：name和type。name属性指定byName，如果没有指定name属性，当注解标注在字段上，即默认取字段的名称作为bean名称寻找依赖对象，当注解标注在属性的setter方法上，即默认取属性名作为bean名称寻找依赖对象。需要注意的是，@Resource如果没有指定name属性，并且按照默认的名称仍然找不到依赖对象时， @Resource注解会回退到按类型装配。但一旦指定了name属性，就只能按名称装配了。 
 
-@Resource有两个中重要的属性：name和type。name属性指定byName，如果没有指定name属性，当注解标注在字段上，即默认取字段的名称作为bean名称寻找依赖对象，当注解标注在属性的setter方法上，即默认取属性名作为bean名称寻找依赖对象。需要注意的是，@Resource如果没有指定name属性，并且按照默认的名称仍然找不到依赖对象时， @Resource注解会回退到按类型装配。但一旦指定了name属性，就只能按名称装配了。
+3.@Autowired spring的 @Resource jdk的 

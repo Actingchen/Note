@@ -424,74 +424,7 @@ private static class IntegerCache {
 
 ###成员内部类、局部内部类、匿名内部类、静态内部类
 
-https://www.cnblogs.com/dolphin0520/p/3811445.html
-
-成员内部类：
-
-```java
-public` `class` `Test {
-  ``public` `static` `void` `main(String[] args) {
-    ``//第一种方式：
-    ``Outter outter = ``new` `Outter();
-    ``Outter.Inner inner = outter.``new` `Inner(); ``//必须通过Outter对象来创建
-    
-    ``//第二种方式：
-    ``Outter.Inner inner1 = outter.getInnerInstance();
-  ``}
-}
-```
-
- 
-
-```java
-class` `Outter {
-  ``private` `Inner inner = ``null``;
-  ``public` `Outter() {
-    
-  ``}
-  
-  ``public` `Inner getInnerInstance() {
-    ``if``(inner == ``null``)
-      ``inner = ``new` `Inner();
-    ``return` `inner;
-  ``}
-   
-  ``class` `Inner {
-    ``public` `Inner() {
-      
-    ``}
-  ``}
-}
-```
-
-局部内部类：
-
-```java
-class People{
-    public People() {
-    
-    }
-}
-```
-
- 
-
-```java
-class Man{
-  public Man(){
-    
-  }
-  
-  public People getWoman(){
-    class Woman extends People{  //局部内部类
-      int age =0;
-    }
-    return new Woman();
-  }
-}
-```
-
-为什么局部内部类和匿名内部类只能访问局部final变量
+https://www.cnblogs.com/dearcabbage/p/10609838.html
 
 ### Object
 
@@ -954,6 +887,10 @@ lambda 表达式只能引用标记了 final 的外层局部变量，这就是说
 为什么要有这个特性？
 
 首先，之前的接口是个双刃剑，好处是面向抽象而不是面向具体编程，缺陷是，当需要修改接口时候，需要修改全部实现该接口的类，目前的java 8之前的集合框架没有foreach方法，通常能想到的解决办法是在JDK里给相关的接口添加新的方法及实现。然而，对于已经发布的版本，是没法在给接口添加新方法的同时不影响已有的实现。所以引进的默认方法。他们的目的是为了解决接口的修改与现有的实现不兼容的问题。
+
+# etc
+
+jsp的四大作用域appliation 整个应用程序 session整个会话 request整个请求 page整个页面
 
 
 
