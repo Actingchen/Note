@@ -369,6 +369,8 @@ union all为（直接将两个查询结果集合并）
 
 union 运算结果为（两个结果集合并后进行去重/distinct）
 
+union 跟 union all的一个性能区别是：union涉及到去重，所以，用到了临时表。
+
 #**索引设计的原则**
 
 1. 服从最左原则
@@ -507,7 +509,7 @@ mysql> explain select distinct name from film;
 
 ##慢查询优化
 
-（1）索引没起作用的情况
+（1）**索引**没起作用的情况
 
 * 1、使用LIKE关键字的查询语句
 
@@ -533,7 +535,7 @@ mysql> explain select distinct name from film;
 
 ​     很多高性能的应用都会对关联查询进行分解，就是可以对每一个表进行一次单表查询，然后将查询结果在应用程序中进行关联，很多场景下这样会更高效
 
-（4）优化LIMIT分页
+（4）**优化LIMIT分页**
 
 例如：select id,title from collect limit 90000,10;//查询10020条然后只返回最后20条
 
@@ -558,6 +560,8 @@ mysql> explain select distinct name from film;
 ​            select * from acct_trans_log WHERE  acct_id = 3095  order by create_time desc limit 0,10
 
 ​           注意sql查询慢的原因都是:引起filesort
+
+（5）**优化group by**：如果对 group by 语句的结果没有排序要求，要在语句后面加 order by null；
 
 #分库分表、垂直拆分、水平拆分
 
