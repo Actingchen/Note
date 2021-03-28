@@ -2,7 +2,7 @@
 
 **--工厂模式和反射机制--**
 
-传统上，类主动创建依赖对象，从而导致类与类之间高耦合,局部变更会影响到全部，ioc相当于在他们耦合关系之间加了一层，现在IOC利用反射机制把创建对象的控制权交给Spring IOC容器来创建（时机）、管理（对象的生命周期）、装配（通过依赖注入，配置对象）。IOC让对象的创建不用去new了，可以由spring自动生产，在运行时动态的去创建对象以及管理对象，并调用对象的方法。
+传统上，类主动创建依赖对象，从而导致类与类之间高耦合,局部变更会影响到全部，ioc相当于在他们耦合关系之间加了一层，现在IOC利用反射机制把创建对象的控制权交给Spring IOC容器来把握创建（时机）、管理（对象的生命周期）、装配（通过依赖注入，配置对象）。IOC让对象的创建不用去new了，可以由spring自动生产，在运行时动态的去创建对象以及管理对象，并调用对象的方法。
 
 > IoC 是设计思想，DI 是具体的实现方式；
 
@@ -29,7 +29,7 @@ Spring的IoC容器在实现控制反转和依赖注入的过程中,可以划分�
 
 接口注入。不提倡。因为它强制被注入对象实现不必要的接口，带有侵入性。
 
-构造方法注入。这种注入方式的优点就是，**对象在构造完成之后，即已进入就绪状态**，可以马上使用。缺点就是，当依赖对象比较多的时候，构造方法的参数列表会比较长。而通过反射构造对象的时候，对相同0类型的参数的处理会比较困难，维护和使用上也比较麻烦。**而且在Java中，构造方法无法被继承**。对于非必须的依赖处理，可能需要引入多个构造方法，而参数数量的变动可能造成维护上的不便。
+构造方法注入。这种注入方式的优点就是，**对象在构造完成之后，即已进入就绪状态**，可以马上使用。缺点就是，当依赖对象比较多的时候，构造方法的参数列表会比较长。而通过**反射构造对象**的时候，对相同0类型的参数的处理会比较困难，维护和使用上也比较麻烦。**而且在Java中，构造方法无法被继承**。对于非必须的依赖处理，可能需要引入多个构造方法，而参数数量的变动可能造成维护上的不便。
 
 setter方法注入。setter方法可以被继承，允许设置默认值。缺点当然就是对象无法在构造完成后马上进入就绪状态。如果通过set方法注入属性，那么spring会通过默认的空参构造方法来实例化对象，所以如果在类中写了一个带有参数的构造方法，一定要把空参数的构造方法写上，否则spring没有办法实例化对象，导致报错。
 
@@ -65,36 +65,38 @@ setter方法注入。setter方法可以被继承，允许设置默认值。缺�
 
 Spring上下文中的Bean生命周期，
 
-1. 实例化 Instantiation
-2. 属性赋值 Populate
-3. 初始化 Initialization
+1. 实例化 Instantiation  //createInstance
+2. 属性赋值 Populate    //PopulateBean
+3. 初始化 Initialization  //InitializationBean
 4. 销毁 Destruction
 
 具体过程：
 
 首先是在对象实例化之前调用``InstantiationAwareBeanPostProcessor``接口的postProcessBeforeInstantiation方法，如果在这个方法里返回不为空的话能够直接return，会断掉接下来的Bean实例的默认创建。也就是在这里直接返回一个代理对象。
 
-（1）实例化Bean：
+* （1）实例化Bean：
 
 对于BeanFactory容器，当客户向容器请求一个尚未初始化的bean时，或初始化bean的时候需要注入另一个尚未初始化的依赖时，容器就会调用createBean进行实例化。对于ApplicationContext容器，当容器启动结束后，通过获取BeanDefinition对象中的信息，实例化所有的bean。
 
-（2）设置Bean属性 Spring根据BeanDefinition中的信息 以及 通过BeanWrapper提供的设置属性的接口完成依赖注入。
+* （2）设置Bean属性 Spring根据BeanDefinition中的信息 以及 通过BeanWrapper提供的设置属性的接口完成依赖注入。
 
-（3）处理Aware接口：**为了能够感知到自身的一些属性**
+* （3）处理Aware接口：**为了能够感知到自身的一些属性**,注入Bean对容器基础设施层面的依赖
 
 如果我们通过各种Aware接口声明了依赖关系，则会出注入Bean对容器基础设施层面的依赖。比如BeanNameAware、BeanFactoryAware和ApplicationContextAware,分别会注入Bean ID、Bean Factory或者ApplicationContext。
 
-（4）调用BeanPostProcessor的前置初始化方法postProcessBeforeInitialization （BeanPostProcessor针对Spring上下文中所有的bean）
+* （4）调用BeanPostProcessor的前置初始化方法postProcessBeforeInitialization （BeanPostProcessor针对Spring上下文中所有的bean）
 
-（5）如果实现了InitializingBean接口、则会调用afterPropertiesSet方法（初始化bean的时候执行，可以针对某个具体的bean进行配置）
+* （5）如果实现了InitializingBean接口、则会调用afterPropertiesSet方法（初始化bean的时候执行，可以针对某个具体的bean进行配置）
 
-（6）调用完Bean自身定义的init方法后
+* （6）调用完Bean自身定义的init方法后
 
-（7）接下来，调用BeanPostProcessor的后置初始化方法postProcessAfterInitialization
+* （7）接下来，调用BeanPostProcessor的后置初始化方法postProcessAfterInitialization
 
 创建过程完毕
 
 然后，销毁Bean，调用destroy方法，如果有实现``DiposiableBean``接口的话，调用里面的destroy方法。
+
+![img](https://upload-images.jianshu.io/upload_images/3131012-0fdb736b21c8cc31.png?imageMogr2/auto-orient/strip|imageView2/2/w/744/format/webp)
 
 # AOP
 
@@ -110,7 +112,7 @@ AOP实现的关键在于 代理模式，AOP代理主要分为静态代理和动�
 
 ##jdk动态代理和cglib动态代理
 
->①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，需要先实现一个``InvocationHandler``去定义我们方法的增强策略，然后拿这个handler去Proxy newProxyInstance去动态生成代理类，最后创建一个代理对象出来，这个代理对象会对方法进行增强之后回调invoke方法反射调用真实对象的方法。动态生成的代理类。                                          如果没有提供接口的话就无法使用jdk动态代理。
+>①JDK动态代理只提供接口的代理，不支持类的代理。核心InvocationHandler接口和Proxy类，需要先实现一个``InvocationHandler``去定义我们方法的增强策略，然后拿这个handler去Proxy newProxyInstance去动态生成代理类，最后创建一个代理对象出来，这个代理对象会对方法进行增强策略并且通过回调invoke方法反射调用真实对象的方法。动态生成的代理类。  如果没有提供接口的话就无法使用jdk动态代理。
 >
 >* 注意：生成的代理类的成员变量是Method，调用方法的时候会拿着这个Method去到``InvocationHandler``调用invoke方法，这个handler就是我们定义的handler。
 
@@ -124,7 +126,12 @@ FactoryBean是一个Bean，归BeanFactory管理，是Spring提供的一个扩展
 
 FactoryBean接口，实现该接口可以通过getObject方法创建自己想要的bean对象。BeanFactory调用getBean获取FactoryBean时，有beanName处理：name加了&为获取FactoryBean本身，如果没加&就是获取getObject方法返回的对象。（？）
 
+# BeanDefinition
 
+BeanDefinition对象就承担了各个业务对象以及它们之间的依赖关系，需要通过某种途径来记录和管理这些信息。责任：容器中的每一个bean都会有一个对应的BeanDefinition实例，该实例负责保存bean对象的所有必要信息，包括bean对象的**class类型**、是否是**抽象类、构造方法和参数**、其它属性等等。
+
+当客户端向容器请求相应对象时，容器就会通过这些信息为客户端返回一个完整可用的bean实例。
+bean定义都通过BeanDefinition的方式注册到**BeanDefinitionRegistry**中
 
 #bean的作用域。
 
@@ -158,7 +165,7 @@ spring支持编程式事务管理和声明式事务管理两种方式：
 
 ##### 事务回滚
 
-默认情况下，事务只有在遇到RuntimeException和Error时才会回滚。但遇到Checked异常不会回滚。
+默认情况下，事务只有在遇到RuntimeException（运行时异常，这种异常我们不需要处理，完全由虚拟机接管。比如我们常见的NullPointerException，我们在写程序时不会进行catch或throw。）和Error时才会回滚。但遇到Checked异常不会回滚。
 
 ##### @Transaction失效场景
 
@@ -268,12 +275,12 @@ Spring对于aop的设计，是使用AnnotationAwareAspectJAutoProxyCreator后置
 
 Autowried和Resource注解实现注入的时候，本质上都是依靠``MergedBeanDefinitionPostProcessor``接口的postProcessMergedBeanDefinition方法去找切入点，通过``InstantiationAwareBeanPostProcessor``接口的postProcessProperties方法去将属性注入进去。基本用法差不多。
 
-区别：1.后置处理器不一样
+区别：
 
-2.属性：
+1.属性：
 
 @Autowired按类型装配byType依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它required属性为false。如果我们想使用按名称装配，可以结合@Qualifier注解一起使用。
 
 @Resource优先按ByName然后再按类型，有两个中重要的属性：name和type。name属性指定byName，如果没有指定name属性，当注解标注在字段上，即默认取字段的名称作为bean名称寻找依赖对象，当注解标注在属性的setter方法上，即默认取属性名作为bean名称寻找依赖对象。需要注意的是，@Resource如果没有指定name属性，并且按照默认的名称仍然找不到依赖对象时， @Resource注解会回退到按类型装配。但一旦指定了name属性，就只能按名称装配了。 
 
-3.@Autowired spring的 @Resource jdk的 
+2.@Autowired spring的- @Resource jdk的

@@ -1,16 +1,47 @@
-# 1 查看所有进程
+-ef# 1 查看所有进程
 ps aux 查看所有进程
-# 2 指定查看进程pid
+# 2 指定查看进程pid(第一行数字）
 ps -ef | grep 进程名
 
 # 3 通过pid查看占用端口
 netstat -nap | grep 进程pid
 
 # 4后台运行jar包
-nohup java -jar xxxx-SNAPSHOT.jar &
+nohup java -jar communitys-0.0.1-SNAPSHOT.jar &
 
 # 5杀死进程pid
 kill -9 22899  杀死pid，关闭程序
 
 # 6查看端口号
 ps -ef | grep java 查看java 运行的几个端口号
+
+查看所有进程
+ps aux
+
+指定查看进程pid
+ps -ef | grep #进程名
+
+查看包含“java”的所有进程
+ps -ef | grep java 查看java 运行的几个端口号
+
+通过pid(进程id)查看占用端口
+netstat -nap | grep pid
+
+根据端口查看对应进程
+netstat -tunlp | grep 8080
+
+后台运行jar包
+nohup java -jar xxxx-SNAPSHOT.jar &  
+
+杀死进程pid
+kill -9 22899 杀死pid，关闭程序
+
+查看日志尾部20行
+tail -n 20 nohup.out
+tail -n 20 -f 某日志 ——每当有新的内容 实时展示出来。
+
+tab键自动补全命令
+tab
+
+列展示文件目录
+ll
